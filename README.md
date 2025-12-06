@@ -4,6 +4,13 @@
 
 ---
 
+## 🌟 **Eslogan**
+> *“Dedícale amor, nosotros el conocimiento.”*
+
+> *"El verdadero crecimiento no solo se mide en centímetros de planta, sino en centímetros cúbicos de comunidad creada."*
+
+---
+
 ## 📱 **Descripción del Proyecto**
 
 Eco-Huerto es una aplicación móvil diseñada para **fomentar la agricultura urbana y la conciencia ambiental** entre estudiantes universitarios, integrando **elementos de gamificación, realidad aumentada** y un **sistema de servicio social comunitario escolar**. La app transforma el cultivo de plantas en una experiencia educativa y socialmente responsable.
@@ -132,10 +139,3 @@ Eco-Huerto es una aplicación móvil diseñada para **fomentar la agricultura ur
 **Desarrollado por:** Carlos López  
 **Universidad:** Universidad Autónoma de Baja California (UABC)  
 **Año:** 2025
-
----
-
-## 🌟 **Eslogan**
-> *“Dedícale amor, nosotros el conocimiento.”*
-
-> *"El verdadero crecimiento no solo se mide en centímetros de planta, sino en centímetros cúbicos de comunidad creada."*
