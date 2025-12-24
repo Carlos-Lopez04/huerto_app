@@ -26,4 +26,4 @@ flutter:
   assets:
     - lib/images/app_logo.png
     - lib/images/icons/trophy_35dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png
-    - lib/data/achievements_data.json
+    # - lib/data/achievements_data.json

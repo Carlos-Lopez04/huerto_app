@@ -3,7 +3,8 @@ import 'package:huerto_app/Themes/app_theme.dart';
 import 'package:huerto_app/Themes/app_font.dart';
 import 'package:huerto_app/Themes/gradients.dart';
 import 'package:huerto_app/models/user_model.dart';
-import 'package:huerto_app/config/widgets/bottom_nav_custom.dart'; // NUEVA IMPORTACIÓN
+import 'package:huerto_app/config/widgets/bottom_nav_custom.dart';
+import 'package:huerto_app/screens/achievements_screen.dart'; // Importar la pantalla de logros
 
 class ProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -59,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Navigator.pop(context);
         break;
       case 1: // Inicio
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pop(context); // Regresar a home
         break;
       case 2: // Cuenta
         // Ya estamos en perfil, no hacer nada
@@ -563,7 +564,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _navigateToAchievements() {
-    _showComingSoon(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AchievementsScreen(),
+      ),
+    );
   }
 
   void _showRankInfo() {

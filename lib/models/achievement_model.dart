@@ -51,7 +51,7 @@ class Achievement {
     };
   }
 
-  // Convertir string de icono a IconData - CORREGIDO
+  // Convertir string de icono a IconData
   IconData get iconData {
     switch (icon) {
       case 'eco':
@@ -62,10 +62,6 @@ class Achievement {
         return Icons.explore;
       case 'water_drop':
         return Icons.water_drop;
-      case 'remove_red_eye':
-        return Icons.remove_red_eye;
-      case 'calendar_today':
-        return Icons.calendar_today;
       case 'agriculture':
         return Icons.agriculture;
       case 'menu_book':
@@ -74,12 +70,18 @@ class Achievement {
         return Icons.camera_alt;
       case 'person':
         return Icons.person;
+      case 'help':
+        return Icons.help;
+      case 'calendar_today':
+        return Icons.calendar_today;
+      case 'notifications':
+        return Icons.notifications;
+      case 'remove_red_eye':
+        return Icons.remove_red_eye;
       case 'people':
         return Icons.people;
       case 'share':
         return Icons.share;
-      case 'help':
-        return Icons.help;
       case 'lightbulb':
         return Icons.lightbulb;
       case 'thumb_up':
@@ -88,12 +90,6 @@ class Achievement {
         return Icons.park;
       case 'grid_view':
         return Icons.grid_view;
-      case 'calendar_month':
-        return Icons.calendar_month;
-      case 'notifications':
-        return Icons.notifications;
-      case 'star':
-        return Icons.star;
       case 'forest':
         return Icons.forest;
       case 'psychology':
@@ -104,56 +100,42 @@ class Achievement {
         return Icons.diversity_3;
       case 'ac_unit':
         return Icons.ac_unit;
-      case 'emoji_events':
-        return Icons.emoji_events;
-      case 'workspace_premium':
-        return Icons.workspace_premium;
-      case 'trending_up':
-        return Icons.trending_up;
-      case 'check_circle':
-        return Icons.check_circle;
-      case 'lock':
-        return Icons.lock;
-      case 'today':
-        return Icons.today;
       case 'spa':
         return Icons.spa;
       case 'yard':
         return Icons.yard;
       case 'local_florist':
         return Icons.local_florist;
-      case 'forum':
-        return Icons.forum;
-      case 'person_add':
-        return Icons.person_add;
+      case 'today':
+        return Icons.today;
       case 'collections':
         return Icons.collections;
       case 'science':
         return Icons.science;
-      case 'article':
-        return Icons.article;
-      case 'healing':
-        return Icons.healing;
-      case 'assignment':
-        return Icons.assignment;
-      case 'strategy':
-        return Icons.auto_awesome;
       case 'smartphone':
         return Icons.smartphone;
       case 'analytics':
         return Icons.analytics;
+      case 'trending_up':
+        return Icons.trending_up;
       case 'new_releases':
         return Icons.new_releases;
       case 'feedback':
         return Icons.feedback;
       case 'local_library':
         return Icons.local_library;
+      case 'forum':
+        return Icons.forum;
+      case 'person_add':
+        return Icons.person_add;
       case 'school':
         return Icons.school;
       case 'create':
         return Icons.create;
       case 'admin_panel_settings':
         return Icons.admin_panel_settings;
+      case 'star':
+        return Icons.star;
       case 'bug_report':
         return Icons.bug_report;
       case 'filter_vintage':
@@ -198,113 +180,42 @@ class Achievement {
         return Icons.done_all;
       case 'military_tech':
         return Icons.military_tech;
-      case 'nature':
-        return Icons.nature;
-      case 'sprout':
-        return Icons.spa;
-      case 'water':
-        return Icons.water_drop;
-      case 'sunny':
-        return Icons.wb_sunny;
-      case 'garden':
-        return Icons.yard;
-      case 'plant':
-        return Icons.local_florist;
-      case 'seed':
-        return Icons.eco;
-      case 'tree':
-        return Icons.park;
-      case 'flower':
-        return Icons.filter_vintage;
-      case 'vegetable':
-        return Icons.grass;
-      case 'fruit':
-        return Icons.local_dining;
-      case 'herb':
-        return Icons.spa;
-      case 'compost_icon':
-        return Icons.recycling;
-      case 'rain':
-        return Icons.beach_access;
-      case 'soil':
-        return Icons.landscape;
-      case 'tools':
-        return Icons.handyman;
-      case 'harvest':
-        return Icons.agriculture;
-      case 'growth':
-        return Icons.trending_up;
-      case 'quality':
-        return Icons.workspace_premium;
-      case 'community':
-        return Icons.people;
-      case 'knowledge':
-        return Icons.menu_book;
-      case 'habit':
-        return Icons.calendar_today;
-      case 'special':
-        return Icons.star;
-      case 'seasonal':
-        return Icons.ac_unit;
-      case 'rare':
-        return Icons.auto_awesome;
-      case 'resistance':
-        return Icons.shield;
-      case 'secret':
-        return Icons.lock;
+      case 'emoji_events':
+        return Icons.emoji_events;
+      case 'article':
+        return Icons.article;
+      case 'healing':
+        return Icons.healing;
+      case 'assignment':
+        return Icons.assignment;
+      case 'strategy':
+        return Icons.timeline;
       default:
-        return Icons.help;
+        return Icons.help; // VALOR POR DEFECTO
     }
   }
 
-  // Convertir string de color a Color
   Color get colorValue {
     switch (color) {
       case 'freshMint':
-        return const Color(0xFF98FB98);
+        return const Color(0xFF4CAF50);
       case 'clearBlue':
-        return const Color(0xFF87CEEB);
+        return const Color(0xFF29B6F6);
       case 'goldenSun':
-        return const Color(0xFFFFD700);
+        return const Color(0xFFFFD54F);
       case 'emeraldLeaf':
-        return const Color(0xFF50C878);
+        return const Color(0xFF2E7D32);
       case 'stoneGray':
-        return const Color(0xFF808080);
-      case 'forestDepth':
-        return const Color(0xFF228B22);
-      case 'blancoHueso':
-        return const Color(0xFFF5F5DC);
-      case 'cloudWhite':
-        return const Color(0xFFF8F8FF);
-      case 'verdeGelido':
-        return const Color(0xFFE0F8E0);
-      case 'warmOrange':
-        return const Color(0xFFFFA500);
-      case 'violetBloom':
-        return const Color(0xFFEE82EE);
-      case 'earthBrown':
-        return const Color(0xFF8B4513);
-      case 'skyBlue':
-        return const Color(0xFF87CEEB);
-      case 'sunsetRed':
-        return const Color(0xFFFF6347);
-      case 'springGreen':
-        return const Color(0xFF00FF7F);
-      case 'autumnOrange':
-        return const Color(0xFFFF8C00);
-      case 'winterBlue':
-        return const Color(0xFF4682B4);
-      case 'summerYellow':
-        return const Color(0xFFFFD700);
+        return const Color(0xFF78909C);
       default:
-        return const Color(0xFF000000);
+        return Colors.grey; // VALOR POR DEFECTO
     }
   }
 
   // Obtener color de fondo basado en el estado (desbloqueado/bloqueado)
   Color getBackgroundColor(bool isUnlocked) {
     if (isUnlocked) {
-      return colorValue.withOpacity(0.2); // ✅ CORRECTO
+      return colorValue.withOpacity(0.2);
     } else {
       return Colors.grey.withOpacity(0.1);
     }
@@ -319,7 +230,7 @@ class Achievement {
     }
   }
 
-  // Obtener color del icono basado en el estado
+  // Obtener color del icono basado en el estado - MÉTODO QUE FALTABA
   Color getIconColor(bool isUnlocked) {
     if (isUnlocked) {
       return colorValue;
@@ -496,7 +407,7 @@ class Achievement {
   }
 }
 
-// Clase para agrupar logros por categoría - OPCIÓN 1
+// Clase para agrupar logros por categoría
 class AchievementCategory {
   final String name;
   final String emoji;
@@ -508,12 +419,12 @@ class AchievementCategory {
 
   const AchievementCategory({
     required this.name,
-    required this.emoji,
-    required this.color,
-    required this.totalAchievements,
-    required this.unlockedAchievements,
-    required this.progressPercentage,
-    required this.achievements,
+    this.emoji = '🏆',
+    this.color = 'stoneGray',
+    this.totalAchievements = 0,
+    this.unlockedAchievements = 0,
+    this.progressPercentage = 0.0,
+    this.achievements = const [],
   });
 
   factory AchievementCategory.fromJson(Map<String, dynamic> json) {
@@ -549,21 +460,21 @@ class AchievementCategory {
   Color get colorValue {
     switch (color) {
       case 'freshMint':
-        return const Color(0xFF98FB98);
+        return const Color(0xFF4CAF50);
       case 'clearBlue':
-        return const Color(0xFF87CEEB);
+        return const Color(0xFF29B6F6);
       case 'goldenSun':
-        return const Color(0xFFFFD700);
+        return const Color(0xFFFFD54F);
       case 'emeraldLeaf':
-        return const Color(0xFF50C878);
+        return const Color(0xFF2E7D32);
       case 'stoneGray':
-        return const Color(0xFF808080);
+        return const Color(0xFF78909C);
       case 'forestDepth':
-        return const Color(0xFF228B22);
+        return const Color(0xFF1B5E20);
       case 'blancoHueso':
         return const Color(0xFFF5F5DC);
       case 'cloudWhite':
-        return const Color(0xFFF8F8FF);
+        return const Color(0xFFFAFAFA);
       case 'verdeGelido':
         return const Color(0xFFE0F8E0);
       case 'warmOrange':
@@ -585,7 +496,7 @@ class AchievementCategory {
       case 'summerYellow':
         return const Color(0xFFFFD700);
       default:
-        return const Color(0xFF808080);
+        return const Color(0xFF78909C);
     }
   }
 }
@@ -615,27 +526,23 @@ class AchievementStats {
 
   int get lockedAchievements => totalAchievements - unlockedAchievements;
 
-  factory AchievementStats.fromJson(Map<String, dynamic> json) {
+  AchievementStats copyWith({
+    int? totalAchievements,
+    int? unlockedAchievements,
+    int? totalPoints,
+    String? currentLevel,
+    Map<String, int>? achievementsByCategory,
+    Map<String, int>? achievementsByLevel,
+  }) {
     return AchievementStats(
-      totalAchievements: (json['totalAchievements'] ?? 0) as int,
-      unlockedAchievements: (json['unlockedAchievements'] ?? 0) as int,
-      totalPoints: (json['totalPoints'] ?? 0) as int,
-      currentLevel: (json['currentLevel'] ?? 'Semilla') as String,
-      achievementsByCategory:
-          Map<String, int>.from(json['achievementsByCategory'] as Map? ?? {}),
-      achievementsByLevel:
-          Map<String, int>.from(json['achievementsByLevel'] as Map? ?? {}),
+      totalAchievements: totalAchievements ?? this.totalAchievements,
+      unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
+      totalPoints: totalPoints ?? this.totalPoints,
+      currentLevel: currentLevel ?? this.currentLevel,
+      achievementsByCategory: achievementsByCategory ??
+          Map<String, int>.from(this.achievementsByCategory),
+      achievementsByLevel: achievementsByLevel ??
+          Map<String, int>.from(this.achievementsByLevel),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'totalAchievements': totalAchievements,
-      'unlockedAchievements': unlockedAchievements,
-      'totalPoints': totalPoints,
-      'currentLevel': currentLevel,
-      'achievementsByCategory': achievementsByCategory,
-      'achievementsByLevel': achievementsByLevel,
-    };
   }
 }

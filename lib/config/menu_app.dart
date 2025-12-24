@@ -60,7 +60,7 @@ class MenuApp {
             title: 'Mis logros',
             onTap: () {
               Navigator.pop(context);
-              _navigateToAchievements(context); // Actualizado
+              _navigateToAchievements(context);
             },
           ),
           _buildDrawerItem(
@@ -209,7 +209,6 @@ class MenuApp {
   }
 
   // Método para navegar a la pantalla de logros
-  // En menu_app.dart, en el método _navigateToAchievements:
   static void _navigateToAchievements(BuildContext context) {
     Navigator.push(
       context,
