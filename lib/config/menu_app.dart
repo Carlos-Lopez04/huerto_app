@@ -1,18 +1,19 @@
+// config/menu_app.dart
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
-import 'package:huerto_app/Themes/app_font.dart';
-import 'package:huerto_app/Themes/gradients.dart';
+import 'package:huerto_app/themes/app_theme.dart';
+import 'package:huerto_app/themes/app_font.dart';
+import 'package:huerto_app/themes/gradients.dart';
 import 'package:huerto_app/Screens/profile_screen.dart';
-import 'package:huerto_app/screens/achievements_screen.dart'; // Importa la pantalla de logros
+import 'package:huerto_app/Screens/achievements_screen.dart';
 import 'package:huerto_app/models/user_model.dart';
+// import 'package:huerto_app/models/avatar_model.dart';
+import 'package:huerto_app/config/widgets/avatar_widget.dart';
 
 class MenuApp {
-  // Datos del usuario (estos vendrían de tu sistema de autenticación)
-  static UserModel _currentUser = UserModel(
+  // Datos del usuario actual - USANDO UserModel.defaultUser
+  static UserModel _currentUser = UserModel.defaultUser(
     name: 'Ana García',
     email: 'ana.garcia@huerto.com',
-    title: 'Agricultor Novato',
-    rank: 'Semilla',
   );
 
   // Método para actualizar el usuario desde otras pantallas
@@ -108,65 +109,164 @@ class MenuApp {
         Navigator.pop(context);
         _navigateToProfile(context);
       },
-      child: DrawerHeader(
+      child: Container(
         decoration: BoxDecoration(
           gradient: AppGradients.appBarPrimary,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: cloudWhite,
-              radius: 30,
-              child: _currentUser.imageUrl != null &&
-                      _currentUser.imageUrl!.isNotEmpty
-                  ? ClipOval(
-                      child: Image.network(
-                        _currentUser.imageUrl!,
-                        fit: BoxFit.cover,
-                        width: 60,
-                        height: 60,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar del usuario
+              Row(
+                children: [
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      AvatarWidget(
+                        avatar: _currentUser.avatar,
+                        size: 70,
+                        borderColor: cloudWhite,
+                        showBorder: true,
                       ),
-                    )
-                  : const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: forestDepth,
-                    ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              _currentUser.name,
-              style: AppFont.titleMedium.copyWith(color: cloudWhite),
-            ),
-            Text(
-              _currentUser.email,
-              style: AppFont.bodySmall.copyWith(color: cloudWhite),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.workspace_premium,
-                    size: 12, color: cloudWhite),
-                const SizedBox(width: 4),
-                Text(
-                  '${_currentUser.title} • ${_currentUser.rank}',
-                  style: AppFont.bodySmall.copyWith(
-                    color: cloudWhite.withOpacity(0.9),
-                    fontSize: 10,
+                      Container(
+                        width: 25,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          color: cloudWhite,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: emeraldLeaf),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 12,
+                          color: forestDepth,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Toca para ver perfil →',
-              style: AppFont.bodySmall.copyWith(
-                color: cloudWhite.withOpacity(0.8),
-                fontSize: 10,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _currentUser.name,
+                          style: AppFont.titleMedium.copyWith(
+                            color: cloudWhite,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _currentUser.email,
+                          style: AppFont.bodySmall.copyWith(
+                            color: cloudWhite.withOpacity(0.9),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: cloudWhite.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: cloudWhite.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.workspace_premium,
+                                      size: 12, color: cloudWhite),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _currentUser.title,
+                                    style: AppFont.bodySmall.copyWith(
+                                      color: cloudWhite,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: cloudWhite.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: cloudWhite.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.leaderboard,
+                                      size: 12, color: cloudWhite),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _currentUser.rank,
+                                    style: AppFont.bodySmall.copyWith(
+                                      color: cloudWhite,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cloudWhite.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.touch_app, size: 12, color: cloudWhite),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Toca para ver perfil completo',
+                      style: AppFont.bodySmall.copyWith(
+                        color: cloudWhite.withOpacity(0.9),
+                        fontSize: 10,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward,
+                        size: 12, color: cloudWhite),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -179,17 +279,35 @@ class MenuApp {
     IconData? icon,
     String? customIconPath,
   }) {
-    return ListTile(
-      leading: customIconPath != null
-          ? Image.asset(
-              customIconPath,
-              width: 24,
-              height: 24,
-              color: forestDepth,
-            )
-          : Icon(icon, color: forestDepth),
-      title: Text(title, style: AppFont.bodyMedium),
-      onTap: onTap,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: ListTile(
+        leading: customIconPath != null
+            ? Image.asset(
+                customIconPath,
+                width: 24,
+                height: 24,
+                color: forestDepth,
+              )
+            : Icon(icon, color: forestDepth),
+        title: Text(
+          title,
+          style: AppFont.bodyMedium.copyWith(
+            color: Colors.grey[800],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        tileColor: Colors.transparent,
+        hoverColor: emeraldLeaf.withOpacity(0.1),
+      ),
     );
   }
 
@@ -202,6 +320,17 @@ class MenuApp {
           user: _currentUser,
           onUserUpdated: (updatedUser) {
             updateUser(updatedUser);
+            // Notificar a la pantalla actual que se actualizó el usuario
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: forestDepth,
+                  content:
+                      Text('Perfil actualizado', style: AppFont.bodyMedium),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
           },
         ),
       ),
@@ -209,13 +338,34 @@ class MenuApp {
   }
 
   // Método para navegar a la pantalla de logros
-  static void _navigateToAchievements(BuildContext context) {
-    Navigator.push(
+  static Future<void> _navigateToAchievements(BuildContext context) async {
+    final updatedUser = await Navigator.push<UserModel>(
       context,
       MaterialPageRoute(
-        builder: (context) => const AchievementsScreen(),
+        builder: (context) => AchievementsScreen(
+          user: _currentUser,
+          onUserUpdated: (UserModel user) {
+            updateUser(user);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: emeraldLeaf,
+                  content:
+                      Text('Logros actualizados', style: AppFont.bodyMedium),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+            return user;
+          },
+        ),
       ),
     );
+
+    // Si recibimos un usuario actualizado, actualizamos
+    if (updatedUser != null) {
+      updateUser(updatedUser);
+    }
   }
 
   // Diálogo para funcionalidades próximamente
@@ -225,15 +375,44 @@ class MenuApp {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: blancoHueso,
-          title: const Text('Próximamente', style: AppFont.titleMedium),
-          content: const Text('Esta funcionalidad estará disponible pronto.',
-              style: AppFont.bodyMedium),
+          title: const Row(
+            children: [
+              Icon(Icons.hourglass_top, color: sunflower),
+              SizedBox(width: 8),
+              Text('Próximamente', style: AppFont.titleMedium),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.construction, size: 50, color: goldenSun),
+              const SizedBox(height: 16),
+              const Text(
+                'Esta funcionalidad estará disponible pronto.',
+                style: AppFont.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Sigue cultivando tu huerto mientras trabajamos en nuevas características.',
+                style: AppFont.bodySmall.copyWith(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK', style: AppFont.button),
+              child: const Text('Entendido', style: AppFont.button),
             ),
           ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
         );
       },
     );
@@ -246,31 +425,107 @@ class MenuApp {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: blancoHueso,
-          title: const Text('Cerrar Sesión', style: AppFont.titleMedium),
-          content: const Text('¿Estás seguro de que quieres cerrar sesión?',
-              style: AppFont.bodyMedium),
+          title: const Row(
+            children: [
+              Icon(Icons.logout, color: tomatoRed),
+              SizedBox(width: 8),
+              Text('Cerrar Sesión', style: AppFont.titleMedium),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AvatarWidget(
+                avatar: _currentUser.avatar,
+                size: 60,
+                borderColor: tomatoRed.withOpacity(0.3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '¿Estás seguro de que quieres cerrar sesión?',
+                style: AppFont.bodyMedium.copyWith(
+                  color: Colors.grey[800],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '¡Vuelve pronto para seguir cuidando tu huerto!',
+                style: AppFont.bodySmall.copyWith(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: forestDepth,
+              ),
               child: const Text('Cancelar', style: AppFont.button),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    backgroundColor: forestDepth,
-                    content: Text('Sesión cerrada', style: AppFont.bodyMedium),
-                  ),
-                );
+                _performLogout(context);
               },
-              child: Text('Cerrar Sesión',
-                  style: AppFont.button.copyWith(color: Colors.red)),
+              style: TextButton.styleFrom(
+                foregroundColor: tomatoRed,
+              ),
+              child: const Text(
+                'Cerrar Sesión',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
         );
       },
     );
+  }
+
+  // Método para realizar el logout
+  static void _performLogout(BuildContext context) {
+    // Mostrar snackbar de confirmación
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: forestDepth,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Sesión cerrada - ¡Hasta pronto, ${_currentUser.name}!',
+              style: AppFont.bodyMedium.copyWith(color: Colors.white),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        action: SnackBarAction(
+          label: 'Ok',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+
+    // Aquí iría la lógica real de logout (limpiar tokens, etc.)
+    // Por ahora solo mostramos el mensaje y regresamos al home
+    Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   // Diálogo de perfil actualizado
@@ -280,48 +535,77 @@ class MenuApp {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: blancoHueso,
-          title: const Text('Mi Perfil', style: AppFont.titleMedium),
+          title: const Row(
+            children: [
+              Icon(Icons.person, color: forestDepth),
+              SizedBox(width: 8),
+              Text('Mi Perfil', style: AppFont.titleMedium),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: CircleAvatar(
-                  backgroundColor: forestDepth,
-                  radius: 40,
-                  child: _currentUser.imageUrl != null &&
-                          _currentUser.imageUrl!.isNotEmpty
-                      ? ClipOval(
-                          child: Image.network(
-                            _currentUser.imageUrl!,
-                            fit: BoxFit.cover,
-                            width: 80,
-                            height: 80,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: blancoHueso,
-                        ),
+                child: AvatarWidget(
+                  avatar: _currentUser.avatar,
+                  size: 100,
+                  borderColor: emeraldLeaf,
+                  showBorder: true,
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Usuario: ${_currentUser.name}', style: AppFont.bodyMedium),
-              Text('Email: ${_currentUser.email}', style: AppFont.bodySmall),
-              Text('Título: ${_currentUser.title}', style: AppFont.bodySmall),
-              Text('Rango: ${_currentUser.rank}', style: AppFont.bodySmall),
+              _buildProfileInfo('Nombre', _currentUser.name),
+              _buildProfileInfo('Email', _currentUser.email),
+              _buildProfileInfo('Título', _currentUser.title),
+              _buildProfileInfo('Rango', _currentUser.rank),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _navigateToProfile(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: forestDepth,
-                  foregroundColor: blancoHueso,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: verdeGelido,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
                 ),
-                child: const Text('Ver perfil completo', style: AppFont.button),
+                child: Row(
+                  children: [
+                    const Icon(Icons.emoji_events,
+                        size: 16, color: emeraldLeaf),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Logros desbloqueados: ${_currentUser.unlockedAchievements.length}',
+                      style: AppFont.bodySmall.copyWith(
+                        color: forestDepth,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _navigateToProfile(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: forestDepth,
+                    foregroundColor: blancoHueso,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.visibility, size: 18),
+                      SizedBox(width: 8),
+                      Text('Ver perfil completo', style: AppFont.button),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -331,6 +615,113 @@ class MenuApp {
               child: const Text('Cerrar', style: AppFont.button),
             ),
           ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
+        );
+      },
+    );
+  }
+
+  // Widget auxiliar para mostrar información del perfil
+  static Widget _buildProfileInfo(String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: AppFont.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppFont.bodySmall.copyWith(
+                color: Colors.grey[800],
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Método para mostrar vista previa rápida del avatar
+  static void showAvatarPreview(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.transparent,
+          contentPadding: EdgeInsets.zero,
+          content: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: AppGradients.cardHighlight,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppGradients.elevatedShadow,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AvatarWidget(
+                  avatar: _currentUser.avatar,
+                  size: 150,
+                  borderColor: emeraldLeaf,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Mi Avatar',
+                  style: AppFont.titleMedium.copyWith(
+                    color: forestDepth,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Toca para personalizar',
+                  style: AppFont.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _navigateToProfile(context);
+                      },
+                      child: const Text('Ver perfil'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _navigateToProfile(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: freshMint,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Personalizar'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

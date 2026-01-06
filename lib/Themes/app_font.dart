@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
+import 'package:huerto_app/themes/app_theme.dart';
 
 class AppFont {
   // Estilos para títulos principales

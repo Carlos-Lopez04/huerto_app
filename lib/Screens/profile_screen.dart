@@ -1,10 +1,13 @@
+// screens/profile_screen.dart
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
-import 'package:huerto_app/Themes/app_font.dart';
-import 'package:huerto_app/Themes/gradients.dart';
+import 'package:huerto_app/themes/app_theme.dart';
+import 'package:huerto_app/themes/app_font.dart';
+import 'package:huerto_app/themes/gradients.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/config/widgets/bottom_nav_custom.dart';
-import 'package:huerto_app/screens/achievements_screen.dart'; // Importar la pantalla de logros
+import 'package:huerto_app/screens/achievements_screen.dart';
+import 'package:huerto_app/screens/avatar_customizer_screen.dart';
+import 'package:huerto_app/config/widgets/avatar_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -36,10 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
     // Notificar al padre sobre el cambio
     widget.onUserUpdated(newUser);
-    _showUpdateConfirmation();
-  }
 
-  void _showUpdateConfirmation() {
+    // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         backgroundColor: forestDepth,
@@ -47,6 +48,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  // Navegación a pantalla de logros
+  Future<void> _navigateToAchievements() async {
+    final updatedUser = await Navigator.push<UserModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AchievementsScreen(
+          user: _currentUser,
+          onUserUpdated: (UserModel user) {
+            // Actualizar localmente y notificar al padre
+            _updateUser(user);
+            return user;
+          },
+        ),
+      ),
+    );
+
+    // Si se devuelve un usuario actualizado
+    if (updatedUser != null) {
+      _updateUser(updatedUser);
+    }
+  }
+
+  // Navegación a pantalla de personalización del avatar - NUEVO MÉTODO
+  Future<void> _navigateToAvatarCustomizer() async {
+    final updatedUser = await Navigator.push<UserModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AvatarCustomizerScreen(
+          user: _currentUser,
+          onAvatarUpdated: (UserModel user) {
+            // Actualizar localmente y notificar al padre
+            _updateUser(user);
+            return user;
+          },
+        ),
+      ),
+    );
+
+    // Si se devuelve un usuario actualizado
+    if (updatedUser != null) {
+      _updateUser(updatedUser);
+    }
   }
 
   // Manejo de la navegación del bottom bar
@@ -84,14 +129,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: blancoHueso),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(_currentUser),
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Sección de foto y información básica
+            // Sección de avatar y información básica
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -101,53 +146,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  // Foto del usuario
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppGradients.interactiveHover,
-                          border: Border.all(
-                            color: emeraldLeaf,
-                            width: 3,
+                  // Avatar del usuario en lugar de foto
+                  GestureDetector(
+                    onTap: _navigateToAvatarCustomizer,
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        AvatarWidget(
+                          avatar: _currentUser.avatar,
+                          size: 120,
+                          borderColor: emeraldLeaf,
+                          showBorder: true,
+                        ),
+                        Container(
+                          width: 35,
+                          height: 35,
+                          decoration: BoxDecoration(
+                            color: blancoHueso,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: emeraldLeaf),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.edit,
+                              size: 18,
+                              color: forestDepth,
+                            ),
+                            onPressed: _navigateToAvatarCustomizer,
                           ),
                         ),
-                        child: _currentUser.imageUrl != null &&
-                                _currentUser.imageUrl!.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  _currentUser.imageUrl!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 60,
-                                color: forestDepth,
-                              ),
-                      ),
-                      Container(
-                        width: 35,
-                        height: 35,
-                        decoration: BoxDecoration(
-                          color: blancoHueso,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: emeraldLeaf),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: forestDepth,
-                          ),
-                          onPressed: _changeProfilePhoto,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -191,6 +220,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Botón para personalizar avatar
+                  _buildAvatarActionButton(),
+                  const SizedBox(height: 16),
+
                   // Divider
                   Container(
                     height: 1,
@@ -211,12 +244,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Título
+                      // Título (seleccionable)
                       _buildInfoCard(
                         icon: Icons.workspace_premium,
                         title: 'Título',
                         value: _currentUser.title,
                         onTap: _navigateToAchievements,
+                        isSelectable: true,
                       ),
 
                       // Rango
@@ -225,6 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         title: 'Rango',
                         value: _currentUser.rank,
                         onTap: _showRankInfo,
+                        isSelectable: false,
                       ),
                     ],
                   ),
@@ -262,7 +297,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: freshMint,
                       ),
                       _buildStatItem(
-                        value: '8',
+                        value:
+                            _currentUser.unlockedAchievements.length.toString(),
                         label: 'Logros',
                         icon: Icons.emoji_events,
                         color: goldenSun,
@@ -310,6 +346,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: emeraldLeaf,
                       ),
                       _buildActionButton(
+                        icon: Icons.face,
+                        label: 'Mi Avatar',
+                        onTap: _navigateToAvatarCustomizer,
+                        color: freshMint,
+                      ),
+                      _buildActionButton(
                         icon: Icons.workspace_premium,
                         label: 'Ver Logros',
                         onTap: _navigateToAchievements,
@@ -335,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      // BOTTOM NAVIGATION BAR - AGREGADO
+      // BOTTOM NAVIGATION BAR
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) => _handleNavigation(index, context),
@@ -349,19 +391,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String value,
     required VoidCallback onTap,
+    required bool isSelectable,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          gradient: AppGradients.interactiveHover,
+          gradient: isSelectable
+              ? AppGradients.interactiveHover
+              : AppGradients.cardPrimary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: AppGradients.innerShadow,
+          border: isSelectable
+              ? Border.all(color: emeraldLeaf.withOpacity(0.3), width: 1)
+              : null,
         ),
         child: Column(
           children: [
-            Icon(icon, size: 24, color: forestDepth),
+            Stack(
+              children: [
+                Icon(icon, size: 24, color: forestDepth),
+                if (isSelectable)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: emeraldLeaf,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_drop_down,
+                        size: 12,
+                        color: blancoHueso,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               title,
@@ -375,8 +444,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               value,
               style: AppFont.bodyMedium.copyWith(
                 fontWeight: FontWeight.bold,
+                color: isSelectable ? emeraldLeaf : null,
               ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -452,6 +524,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget para botón de acción del avatar
+  Widget _buildAvatarActionButton() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: freshMint.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: freshMint.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.face, size: 16, color: freshMint),
+          const SizedBox(width: 8),
+          Text(
+            'Personalizar avatar',
+            style: AppFont.bodySmall.copyWith(
+              color: freshMint,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward, size: 14, color: freshMint),
+        ],
       ),
     );
   }
@@ -559,15 +659,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text('Guardar', style: AppFont.bodyMedium),
           ),
         ],
-      ),
-    );
-  }
-
-  void _navigateToAchievements() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AchievementsScreen(),
       ),
     );
   }

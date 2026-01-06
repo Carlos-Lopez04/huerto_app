@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
-import 'package:huerto_app/Themes/app_font.dart';
+import 'package:huerto_app/themes/app_theme.dart';
+import 'package:huerto_app/themes/app_font.dart';
 
 class CustomCards {
   // Configuración unificada para todas las cards

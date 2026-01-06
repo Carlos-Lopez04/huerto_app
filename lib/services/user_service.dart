@@ -6,11 +6,9 @@ class UserService {
   factory UserService() => _instance;
   UserService._internal();
 
-  UserModel _currentUser = UserModel(
+  UserModel _currentUser = UserModel.defaultUser(
     name: 'Ana García',
     email: 'ana.garcia@huerto.com',
-    title: 'Agricultor Novato',
-    rank: 'Semilla',
   );
 
   UserModel get currentUser => _currentUser;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
+import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/config/widgets/cards_custom.dart';
-import 'package:huerto_app/Themes/app_font.dart';
+import 'package:huerto_app/themes/app_font.dart';
 import 'package:huerto_app/config/menu_app.dart';
-import 'package:huerto_app/Themes/gradients.dart';
-import 'package:huerto_app/Screens/profile_screen.dart';
+import 'package:huerto_app/themes/gradients.dart';
+import 'package:huerto_app/screens/profile_screen.dart';
 import 'package:huerto_app/config/widgets/bottom_nav_custom.dart'; // NUEVA IMPORTACIÓN
 
 class HomeScreen extends StatefulWidget {

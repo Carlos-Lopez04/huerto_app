@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:huerto_app/Themes/app_theme.dart';
-import 'package:huerto_app/Themes/gradients.dart';
+import 'package:huerto_app/themes/app_theme.dart';
+import 'package:huerto_app/themes/gradients.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
