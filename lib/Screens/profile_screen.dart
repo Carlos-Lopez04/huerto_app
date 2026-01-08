@@ -298,13 +298,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _buildStatItem(
                         value:
-                            _currentUser.unlockedAchievements.length.toString(),
+                            '${_currentUser.unlockedAchievementsCount}/${_currentUser.achievements.length}',
                         label: 'Logros',
                         icon: Icons.emoji_events,
                         color: goldenSun,
                       ),
                       _buildStatItem(
-                        value: '15',
+                        value: _currentUser.consecutiveDays.toString(),
                         label: 'Días activo',
                         icon: Icons.calendar_today,
                         color: clearBlue,

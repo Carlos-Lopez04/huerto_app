@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import '../models/achievement_model.dart';
+import 'package:huerto_app/models/achievement_model.dart';
+import 'package:huerto_app/models/user_model.dart';
 
 class AchievementService {
-  static Future<List<AchievementCategory>> getCategories() async {
+  // Método para obtener categorías desde JSON
+  static Future<List<AchievementCategoryModel>> getCategories() async {
     try {
-      // RUTA CORREGIDA
       final jsonString =
           await rootBundle.loadString('lib/data/achievements_data.json');
       print(
@@ -15,86 +16,83 @@ class AchievementService {
       final categoriesJson = data['categories'] as List? ?? [];
 
       return categoriesJson
-          .map((categoryJson) => AchievementCategory.fromJson(categoryJson))
-          .cast<AchievementCategory>()
+          .map(
+              (categoryJson) => AchievementCategoryModel.fromJson(categoryJson))
+          .cast<AchievementCategoryModel>()
           .toList();
     } catch (e) {
       print('Error cargando categorías: $e');
 
       // Si falla, usar datos de muestra
-      return _getSampleCategories();
+      return AchievementUtils.getSampleCategories();
     }
   }
 
-  static List<AchievementCategory> _getSampleCategories() {
-    final sampleAchievements = [
-      const Achievement(
-        id: 1,
-        title: "Primera Siembra",
-        description: "Plantar tu primera semilla",
-        category: "Cultivo",
-        icon: "eco",
-        color: "freshMint",
-        points: 10,
-        level: "Semilla",
-        requirements: "plant_first_seed",
-      ),
-      const Achievement(
-        id: 2,
-        title: "Bienvenido al Huerto",
-        description: "Completar registro en la app",
-        category: "Hábitos",
-        icon: "flag",
-        color: "clearBlue",
-        points: 5,
-        level: "Semilla",
-        requirements: "complete_registration",
-      ),
-      const Achievement(
-        id: 3,
-        title: "Explorador Novato",
-        description: "Navegar por todas las secciones de la app",
-        category: "Hábitos",
-        icon: "explore",
-        color: "clearBlue",
-        points: 8,
-        level: "Semilla",
-        requirements: "explore_all_sections",
-      ),
-      const Achievement(
-        id: 4,
-        title: "Primer Riego",
-        description: "Regar una planta por primera vez",
-        category: "Cultivo",
-        icon: "water_drop",
-        color: "freshMint",
-        points: 10,
-        level: "Semilla",
-        requirements: "water_first_plant",
-      ),
-    ];
+  // Método para obtener logros desde JSON
+  static Future<List<Achievement>> getAchievements() async {
+    try {
+      final jsonString =
+          await rootBundle.loadString('lib/data/achievements_data.json');
+      final data = json.decode(jsonString);
+      final achievementsJson = data['achievements'] as List? ?? [];
 
-    return [
-      AchievementCategory(
-        name: "Cultivo",
-        emoji: "🌱",
-        color: "freshMint",
-        totalAchievements: 2,
-        unlockedAchievements: 2,
-        progressPercentage: 100.0,
-        achievements:
-            sampleAchievements.where((a) => a.category == "Cultivo").toList(),
-      ),
-      AchievementCategory(
-        name: "Hábitos",
-        emoji: "⚡",
-        color: "clearBlue",
-        totalAchievements: 2,
-        unlockedAchievements: 2,
-        progressPercentage: 100.0,
-        achievements:
-            sampleAchievements.where((a) => a.category == "Hábitos").toList(),
-      ),
-    ];
+      return achievementsJson
+          .map((achievementJson) => Achievement.fromJson(achievementJson))
+          .cast<Achievement>()
+          .toList();
+    } catch (e) {
+      print('Error cargando logros: $e');
+
+      // Si falla, usar datos de muestra
+      return AchievementUtils.getSampleAchievements();
+    }
+  }
+
+  // Método para verificar logros nuevos (reemplaza el de achievement_checker_service.dart)
+  static List<Achievement> checkAchievements(UserModel user) {
+    final sampleAchievements = AchievementUtils.getSampleAchievements();
+    final List<Achievement> newAchievements = [];
+
+    // Verificar cada logro de muestra
+    for (final achievement in sampleAchievements) {
+      // Si el usuario no tiene este logro
+      if (!user.hasAchievement(achievement.id)) {
+        // Verificar si cumple los requisitos
+        switch (achievement.id) {
+          case 'first_seed':
+            if ((user.activityCounts['plant_seed'] ?? 0) >= 1) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'water_master_beginner':
+            if ((user.activityCounts['water_plant'] ?? 0) >= 10) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'daily_streak_3':
+            if (user.consecutiveDays >= 3) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'level_2':
+            if (user.calculatedLevel >= 2) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'social_beginner':
+            if ((user.activityCounts['share_garden'] ?? 0) >= 1) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'first_harvest':
+            if ((user.activityCounts['harvest_plant'] ?? 0) >= 1) {
+              newAchievements.add(achievement);
+            }
+            break;
+        }
+      }
+    }
+
+    return newAchievements;
   }
 }

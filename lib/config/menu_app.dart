@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/themes/app_font.dart';
 import 'package:huerto_app/themes/gradients.dart';
-import 'package:huerto_app/Screens/profile_screen.dart';
-import 'package:huerto_app/Screens/achievements_screen.dart';
+import 'package:huerto_app/screens/profile_screen.dart';
+import 'package:huerto_app/screens/achievements_screen.dart';
+import 'package:huerto_app/screens/activity_tracking_screen.dart';
 import 'package:huerto_app/models/user_model.dart';
-// import 'package:huerto_app/models/avatar_model.dart';
 import 'package:huerto_app/config/widgets/avatar_widget.dart';
 
 class MenuApp {
-  // Datos del usuario actual - USANDO UserModel.defaultUser
+  // Datos del usuario actual
   static UserModel _currentUser = UserModel.defaultUser(
     name: 'Ana García',
     email: 'ana.garcia@huerto.com',
@@ -58,10 +58,19 @@ class MenuApp {
           _buildDrawerItem(
             customIconPath:
                 'lib/images/icons/trophy_35dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png',
-            title: 'Mis logros',
+            title: 'Mis Logros',
             onTap: () {
               Navigator.pop(context);
               _navigateToAchievements(context);
+            },
+          ),
+          // NUEVO: Item para seguimiento de actividades
+          _buildDrawerItem(
+            icon: Icons.track_changes,
+            title: 'Actividades',
+            onTap: () {
+              Navigator.pop(context);
+              _navigateToActivityTracking(context);
             },
           ),
           _buildDrawerItem(
@@ -78,6 +87,14 @@ class MenuApp {
             onTap: () {
               Navigator.pop(context);
               _showComingSoon(context);
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.bar_chart,
+            title: 'Mi Progreso',
+            onTap: () {
+              Navigator.pop(context);
+              _showProgressDialog(context);
             },
           ),
           _buildDrawerItem(
@@ -118,7 +135,7 @@ class MenuApp {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar del usuario
+              // Avatar y información del usuario
               Row(
                 children: [
                   Stack(
@@ -179,6 +196,7 @@ class MenuApp {
                         const SizedBox(height: 8),
                         Row(
                           children: [
+                            // Título actual
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
@@ -201,11 +219,14 @@ class MenuApp {
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 8),
+                            // Rango actual
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
@@ -225,6 +246,67 @@ class MenuApp {
                                     _currentUser.rank,
                                     style: AppFont.bodySmall.copyWith(
                                       color: cloudWhite,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        // NUEVO: Puntos y nivel
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: goldenSun.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: goldenSun.withOpacity(0.5),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.star,
+                                      size: 12, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${_currentUser.totalPoints} pts',
+                                    style: AppFont.bodySmall.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: freshMint.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: freshMint.withOpacity(0.5),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.leaderboard,
+                                      size: 12, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Nivel ${_currentUser.calculatedLevel}',
+                                    style: AppFont.bodySmall.copyWith(
+                                      color: Colors.white,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -368,6 +450,39 @@ class MenuApp {
     }
   }
 
+  // NUEVO: Método para navegar a seguimiento de actividades
+  static void _navigateToActivityTracking(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityTrackingScreen(
+          user: _currentUser,
+          onUserUpdated: (updatedUser) {
+            updateUser(updatedUser);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: freshMint,
+                  content: Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        '¡Actividad registrada! +10 puntos',
+                        style: AppFont.bodyMedium.copyWith(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   // Diálogo para funcionalidades próximamente
   static void _showComingSoon(BuildContext context) {
     showDialog(
@@ -457,6 +572,26 @@ class MenuApp {
                 ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 16),
+              // Mostrar estadísticas antes de cerrar sesión
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: verdeGelido,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildStatRow(
+                        'Puntos totales', '${_currentUser.totalPoints}'),
+                    _buildStatRow(
+                        'Logros', '${_currentUser.achievements.length}'),
+                    _buildStatRow(
+                        'Días seguidos', '${_currentUser.consecutiveDays}'),
+                    _buildStatRow('Nivel', '${_currentUser.calculatedLevel}'),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -489,6 +624,25 @@ class MenuApp {
           elevation: 8,
         );
       },
+    );
+  }
+
+  // Widget auxiliar para mostrar estadísticas
+  static Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: AppFont.bodySmall.copyWith(color: Colors.grey[600])),
+          Text(value,
+              style: AppFont.bodySmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: forestDepth,
+              )),
+        ],
+      ),
     );
   }
 
@@ -528,66 +682,168 @@ class MenuApp {
     Navigator.popUntil(context, (route) => route.isFirst);
   }
 
-  // Diálogo de perfil actualizado
-  static void showProfileDialog(BuildContext context) {
+  // NUEVO: Diálogo para mostrar progreso
+  static void _showProgressDialog(BuildContext context) {
+    final user = _currentUser;
+    final stats = user.stats;
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: blancoHueso,
-          title: const Row(
-            children: [
-              Icon(Icons.person, color: forestDepth),
-              SizedBox(width: 8),
-              Text('Mi Perfil', style: AppFont.titleMedium),
-            ],
-          ),
-          content: Column(
+      builder: (context) => AlertDialog(
+        backgroundColor: blancoHueso,
+        title: const Row(
+          children: [
+            Icon(Icons.bar_chart, color: forestDepth),
+            SizedBox(width: 8),
+            Text('Mi Progreso', style: AppFont.titleMedium),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: AvatarWidget(
-                  avatar: _currentUser.avatar,
-                  size: 100,
-                  borderColor: emeraldLeaf,
-                  showBorder: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildProfileInfo('Nombre', _currentUser.name),
-              _buildProfileInfo('Email', _currentUser.email),
-              _buildProfileInfo('Título', _currentUser.title),
-              _buildProfileInfo('Rango', _currentUser.rank),
-              const SizedBox(height: 16),
+              // Barra de progreso del nivel
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: verdeGelido,
+                  gradient: const LinearGradient(
+                    colors: [freshMint, emeraldLeaf],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.emoji_events,
-                        size: 16, color: emeraldLeaf),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Logros desbloqueados: ${_currentUser.unlockedAchievements.length}',
-                      style: AppFont.bodySmall.copyWith(
-                        color: forestDepth,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Nivel ${user.calculatedLevel}',
+                          style: AppFont.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${user.totalPoints} pts',
+                          style: AppFont.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: user.levelProgress,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      color: Colors.white,
+                      minHeight: 10,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Progreso: ${(user.levelProgress * 100).toStringAsFixed(0)}%',
+                          style:
+                              AppFont.bodySmall.copyWith(color: Colors.white70),
+                        ),
+                        Text(
+                          '${user.pointsToNextLevel} pts para nivel ${user.calculatedLevel + 1}',
+                          style:
+                              AppFont.bodySmall.copyWith(color: Colors.white70),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 16),
+
+              // Estadísticas detalladas
+              Text(
+                'Estadísticas Detalladas',
+                style: AppFont.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: forestDepth,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 2.5,
+                children: [
+                  _buildStatCard(
+                    'Logros Desbl.',
+                    '${user.achievements.length}',
+                    Icons.emoji_events,
+                    freshMint,
+                  ),
+                  _buildStatCard(
+                    'Días Seguidos',
+                    '${user.consecutiveDays}',
+                    Icons.calendar_today,
+                    sunflower,
+                  ),
+                  _buildStatCard(
+                    'Actividades Tot.',
+                    '${stats['totalActivities']}',
+                    Icons.checklist,
+                    clearBlue,
+                  ),
+                  _buildStatCard(
+                    'Login Hoy',
+                    user.hasLoggedInToday ? 'Sí' : 'No',
+                    Icons.login,
+                    user.hasLoggedInToday ? emeraldLeaf : Colors.grey,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Actividades más comunes
+              if (user.activityCounts.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Actividades Frecuentes',
+                      style: AppFont.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: forestDepth,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...user.activityCounts.entries
+                        .where((entry) => entry.value > 0)
+                        .take(3)
+                        .map((entry) =>
+                            _buildActivityItem(entry.key, entry.value))
+                        .toList(),
+                  ],
+                ),
+
+              const SizedBox(height: 16),
+
+              // Botón para ver más detalles
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    _navigateToProfile(context);
+                    _navigateToActivityTracking(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: forestDepth,
@@ -597,59 +853,66 @@ class MenuApp {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.visibility, size: 18),
-                      SizedBox(width: 8),
-                      Text('Ver perfil completo', style: AppFont.button),
-                    ],
-                  ),
+                  icon: const Icon(Icons.timeline, size: 18),
+                  label: const Text('Ver Progreso Detallado'),
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar', style: AppFont.button),
-            ),
-          ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar', style: AppFont.button),
           ),
-          elevation: 8,
-        );
-      },
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        elevation: 8,
+      ),
     );
   }
 
-  // Widget auxiliar para mostrar información del perfil
-  static Widget _buildProfileInfo(String label, String value) {
+  static Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label: ',
-            style: AppFont.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, size: 16, color: color),
           ),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              value,
-              style: AppFont.bodySmall.copyWith(
-                color: Colors.grey[800],
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: AppFont.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  value,
+                  style: AppFont.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: forestDepth,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -657,73 +920,66 @@ class MenuApp {
     );
   }
 
-  // Método para mostrar vista previa rápida del avatar
-  static void showAvatarPreview(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.transparent,
-          contentPadding: EdgeInsets.zero,
-          content: Container(
-            padding: const EdgeInsets.all(20),
+  static Widget _buildActivityItem(String activityId, int count) {
+    final activityNames = {
+      'plant_seed': 'Plantar Semilla',
+      'water_plant': 'Regar Plantas',
+      'daily_login': 'Login Diario',
+      'share_garden': 'Compartir Huerto',
+      'harvest_plant': 'Cosechar',
+    };
+
+    final activityIcons = {
+      'plant_seed': Icons.eco,
+      'water_plant': Icons.water_drop,
+      'daily_login': Icons.login,
+      'share_garden': Icons.share,
+      'harvest_plant': Icons.grass,
+    };
+
+    final activityColors = {
+      'plant_seed': freshMint,
+      'water_plant': clearBlue,
+      'daily_login': sunflower,
+      'share_garden': berryPink,
+      'harvest_plant': goldenSun,
+    };
+
+    final name = activityNames[activityId] ?? activityId;
+    final icon = activityIcons[activityId] ?? Icons.help;
+    final color = activityColors[activityId] ?? forestDepth;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(name, style: AppFont.bodySmall),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              gradient: AppGradients.cardHighlight,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: AppGradients.elevatedShadow,
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AvatarWidget(
-                  avatar: _currentUser.avatar,
-                  size: 150,
-                  borderColor: emeraldLeaf,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Mi Avatar',
-                  style: AppFont.titleMedium.copyWith(
-                    color: forestDepth,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Toca para personalizar',
-                  style: AppFont.bodySmall.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _navigateToProfile(context);
-                      },
-                      child: const Text('Ver perfil'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _navigateToProfile(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: freshMint,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Personalizar'),
-                    ),
-                  ],
-                ),
-              ],
+            child: Text(
+              '$count veces',
+              style: AppFont.bodySmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

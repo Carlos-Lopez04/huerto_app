@@ -1,471 +1,573 @@
 import 'package:flutter/material.dart';
 import 'package:huerto_app/models/user_model.dart';
+import 'package:huerto_app/models/achievement_model.dart';
+import 'package:huerto_app/themes/app_theme.dart';
+import 'package:huerto_app/themes/app_font.dart';
+import 'package:huerto_app/themes/gradients.dart';
+import 'package:huerto_app/config/widgets/bottom_nav_custom.dart';
+import 'package:huerto_app/config/widgets/achievement_card.dart';
+import 'package:huerto_app/config/widgets/progress_widget.dart';
 
 class AchievementsScreen extends StatefulWidget {
   final UserModel user;
-  final Function(UserModel) onUserUpdated; // Cambiado a no opcional
+  final Function(UserModel) onUserUpdated;
 
   const AchievementsScreen({
     super.key,
     required this.user,
-    required this.onUserUpdated, // Ahora es requerido
+    required this.onUserUpdated,
   });
 
   @override
   State<AchievementsScreen> createState() => _AchievementsScreenState();
 }
 
-class _AchievementsScreenState extends State<AchievementsScreen> {
-  late String _selectedTitle;
+class _AchievementsScreenState extends State<AchievementsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late UserModel _currentUser;
+  List<Achievement> _allAchievements = [];
+  String _selectedTitle = '';
 
-  // Lista de todos los logros disponibles
-  final List<Map<String, dynamic>> _allAchievements = [
-    {
-      'id': 'beginner',
-      'title': 'Novato Verde',
-      'description': 'Completa tu primera planta',
-      'icon': Icons.eco,
-      'color': const Color(0xFF4CAF50), // freshMint
-      'requirement': 'Completar tutorial',
-    },
-    {
-      'id': 'collector',
-      'title': 'Coleccionista',
-      'description': 'Cuida 5 plantas diferentes',
-      'icon': Icons.forest,
-      'color': const Color(0xFF2E7D32), // emeraldLeaf
-      'requirement': '5 plantas únicas',
-    },
-    {
-      'id': 'expert',
-      'title': 'Experto Botánico',
-      'description': 'Cuida 10 plantas por 30 días',
-      'icon': Icons.psychology,
-      'color': const Color(0xFFFF9800), // goldenSun
-      'requirement': '10 plantas x 30 días',
-    },
-    {
-      'id': 'master',
-      'title': 'Maestro Jardinero',
-      'description': 'Completa todos los tipos de plantas',
-      'icon': Icons.workspace_premium,
-      'color': const Color(0xFF1B5E20), // forestDepth
-      'requirement': 'Todas las especies',
-    },
-    {
-      'id': 'streak',
-      'title': 'Racha Dorada',
-      'description': '30 días consecutivos activo',
-      'icon': Icons.local_fire_department,
-      'color': const Color(0xFFFFC107), // sunflower
-      'requirement': '30 días seguidos',
-    },
-    {
-      'id': 'helper',
-      'title': 'Guía Verde',
-      'description': 'Ayuda a 3 amigos a comenzar',
-      'icon': Icons.group,
-      'color': const Color(0xFF2196F3), // clearBlue
-      'requirement': '3 amigos invitados',
-    },
-  ];
+  // Índice para la navegación inferior
+  int _currentIndex = 2;
 
   @override
   void initState() {
     super.initState();
-    _selectedTitle = widget.user.title;
+    _currentUser = widget.user;
+    _selectedTitle = _currentUser.title;
+
+    // Inicializar con logros de ejemplo
+    _allAchievements = AchievementUtils.getSampleAchievements();
+
+    _tabController = TabController(
+      length: AchievementCategory.values.length,
+      vsync: this,
+    );
   }
 
-  // Obtener logros desbloqueados
-  List<Map<String, dynamic>> get unlockedAchievements {
-    return _allAchievements.where((achievement) {
-      return widget.user.unlockedAchievements.contains(achievement['id']);
-    }).toList();
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
-  // Obtener logros bloqueados
-  List<Map<String, dynamic>> get lockedAchievements {
-    return _allAchievements.where((achievement) {
-      return !widget.user.unlockedAchievements.contains(achievement['id']);
-    }).toList();
+  // Obtener logros por categoría
+  List<Achievement> _getAchievementsByCategory(AchievementCategory category) {
+    return _allAchievements
+        .where((achievement) => achievement.category == category)
+        .toList();
   }
 
-  // Método para guardar cambios
-  void _saveChanges() {
-    final updatedUser = widget.user.copyWith(title: _selectedTitle);
+  // Obtener logros desbloqueados por categoría
+  List<Achievement> _getUnlockedAchievementsByCategory(
+      AchievementCategory category) {
+    return _getAchievementsByCategory(category)
+        .where((achievement) => _currentUser.hasAchievement(achievement.id))
+        .toList();
+  }
+
+  // Obtener logros bloqueados por categoría
+  List<Achievement> _getLockedAchievementsByCategory(
+      AchievementCategory category) {
+    return _getAchievementsByCategory(category)
+        .where((achievement) => !_currentUser.hasAchievement(achievement.id))
+        .toList();
+  }
+
+  // Equipar un logro como título
+  void _equipAchievement(Achievement achievement) {
+    final updatedUser = _currentUser.equipAchievement(achievement.id);
+    setState(() {
+      _currentUser = updatedUser;
+      _selectedTitle = achievement.title;
+    });
+
     widget.onUserUpdated(updatedUser);
-    Navigator.of(context).pop(updatedUser);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: forestDepth,
+        content: Text(
+          '¡Ahora usas "${achievement.title}" como título!',
+          style: AppFont.bodyMedium.copyWith(color: Colors.white),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // Manejo de la navegación del bottom bar
+  void _handleNavigation(int index, BuildContext context) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    switch (index) {
+      case 0: // Anterior
+        Navigator.pop(context);
+        break;
+      case 1: // Inicio
+        Navigator.popUntil(context, (route) => route.isFirst);
+        break;
+      case 2: // Cuenta
+        // Ya estamos en logros, no hacer nada
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final userStats = _currentUser.stats;
+    final categories = AchievementUtils.getSampleCategories();
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: blancoHueso,
       appBar: AppBar(
         title: const Text(
-          'Mis Logros',
-          style: TextStyle(color: Colors.white),
+          'Logros y Progreso',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: forestDepth,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(_currentUser),
         ),
-        actions: [
-          if (_selectedTitle != widget.user.title)
-            IconButton(
-              icon: const Icon(Icons.check, color: Colors.white),
-              onPressed: _saveChanges,
-              tooltip: 'Guardar cambios',
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Banner del logro seleccionado actualmente
-            _buildCurrentAchievementBanner(),
-
-            const SizedBox(height: 24),
-
-            // Logros desbloqueados
-            if (unlockedAchievements.isNotEmpty)
-              _buildAchievementsSection(
-                title: 'Logros Desbloqueados',
-                achievements: unlockedAchievements,
-                isLocked: false,
-              ),
-
-            const SizedBox(height: 24),
-
-            // Logros bloqueados
-            if (lockedAchievements.isNotEmpty)
-              _buildAchievementsSection(
-                title: 'Próximos Logros',
-                achievements: lockedAchievements,
-                isLocked: true,
-              ),
-
-            const SizedBox(height: 40),
-          ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: freshMint,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          tabs: categories.map((category) {
+            return Tab(
+              text:
+                  '${category.displayName} (${category.unlockedAchievements}/${category.totalAchievements})',
+            );
+          }).toList(),
         ),
       ),
-      floatingActionButton: _selectedTitle != widget.user.title
-          ? FloatingActionButton.extended(
-              onPressed: _saveChanges,
-              backgroundColor: const Color(0xFF2E7D32),
-              icon: const Icon(Icons.check, color: Colors.white),
-              label: const Text(
-                'Aplicar Cambios',
-                style: TextStyle(color: Colors.white),
-              ),
-            )
-          : null,
-    );
-  }
-
-  // Widget para el banner del logro actual
-  Widget _buildCurrentAchievementBanner() {
-    final currentAchievement = _allAchievements.firstWhere(
-      (a) => a['title'] == _selectedTitle,
-      orElse: () => _allAchievements[0],
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFE8F5E9),
-            Colors.white,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.3)),
-      ),
-      child: Column(
+      body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      currentAchievement['color'].withOpacity(0.3),
-                      currentAchievement['color'].withOpacity(0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Icon(
-                  currentAchievement['icon'],
-                  color: currentAchievement['color'],
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Tu Título Actual',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _selectedTitle,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      currentAchievement['description'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Barra de progreso del nivel
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: ProgressWidget(
+              currentPoints: _currentUser.totalPoints,
+              currentLevel: _currentUser.calculatedLevel,
+              progress: _currentUser.levelProgress,
+              title: 'Tu Progreso de Nivel',
+            ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+
+          // Estadísticas rápidas
+          _buildQuickStats(userStats),
+
+          // Pestañas de logros
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: categories.map((category) {
+                final categoryEnum = _getCategoryFromName(category.name);
+                return _buildCategoryTab(categoryEnum, category);
+              }).toList(),
             ),
-            child: const Text(
-              'Selecciona un logro para mostrarlo en tu perfil',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
-            ),
+          ),
+        ],
+      ),
+      // BOTTOM NAVIGATION BAR
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (index) => _handleNavigation(index, context),
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(Map<String, dynamic> stats) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: verdeGelido,
+        border: Border.all(color: emeraldLeaf.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppGradients.innerShadow,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            label: 'Puntos',
+            value: '${_currentUser.totalPoints}',
+            icon: Icons.star,
+            color: goldenSun,
+          ),
+          _buildStatItem(
+            label: 'Logros',
+            value: '${_currentUser.achievements.length}',
+            icon: Icons.emoji_events,
+            color: freshMint,
+          ),
+          _buildStatItem(
+            label: 'Días seguidos',
+            value: '${_currentUser.consecutiveDays}',
+            icon: Icons.calendar_today,
+            color: clearBlue,
+          ),
+          _buildStatItem(
+            label: 'Actividades',
+            value: '${stats['totalActivities']}',
+            icon: Icons.checklist,
+            color: berryPink,
           ),
         ],
       ),
     );
   }
 
-  // Widget para sección de logros
-  Widget _buildAchievementsSection({
-    required String title,
-    required List<Map<String, dynamic>> achievements,
-    required bool isLocked,
+  Widget _buildStatItem({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12, left: 4),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: AppFont.bodyMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: forestDepth,
           ),
         ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.2,
+        Text(
+          label,
+          style: AppFont.bodySmall.copyWith(
+            color: Colors.grey[600],
           ),
-          itemCount: achievements.length,
-          itemBuilder: (context, index) {
-            final achievement = achievements[index];
-            final isSelected = achievement['title'] == _selectedTitle;
-            final isUnlocked = !isLocked;
-
-            return _buildAchievementCard(
-              achievement: achievement,
-              isSelected: isSelected,
-              isUnlocked: isUnlocked,
-              onTap: isUnlocked
-                  ? () {
-                      setState(() {
-                        _selectedTitle = achievement['title'];
-                      });
-                    }
-                  : null,
-            );
-          },
         ),
       ],
     );
   }
 
-  // Widget para tarjeta de logro individual
-  Widget _buildAchievementCard({
-    required Map<String, dynamic> achievement,
-    required bool isSelected,
-    required bool isUnlocked,
-    required VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: isSelected
-              ? achievement['color'].withOpacity(0.1)
-              : isUnlocked
-                  ? achievement['color'].withOpacity(0.05)
-                  : Colors.grey.withOpacity(0.05),
-          border: Border.all(
-            color: isSelected
-                ? achievement['color'].withOpacity(0.8)
-                : isUnlocked
-                    ? achievement['color'].withOpacity(0.2)
-                    : Colors.grey.withOpacity(0.2),
-            width: isSelected ? 2 : 1,
+  Widget _buildCategoryTab(
+      AchievementCategory category, AchievementCategoryModel categoryData) {
+    final unlockedAchievements = _getUnlockedAchievementsByCategory(category);
+    final lockedAchievements = _getLockedAchievementsByCategory(category);
+    final totalAchievements =
+        unlockedAchievements.length + lockedAchievements.length;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Encabezado de categoría
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AchievementUtils.getCategoryColor(category).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color:
+                  AchievementUtils.getCategoryColor(category).withOpacity(0.3),
+            ),
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: achievement['color'].withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  )
-                ]
-              : null,
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icono
-                  Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isUnlocked
-                              ? achievement['color'].withOpacity(0.2)
-                              : Colors.grey.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          achievement['icon'],
-                          color: isUnlocked
-                              ? achievement['color']
-                              : Colors.grey.withOpacity(0.5),
-                          size: 24,
-                        ),
+          child: Row(
+            children: [
+              Text(
+                AchievementUtils.getCategoryEmoji(category),
+                style: const TextStyle(fontSize: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AchievementUtils.getCategoryName(category),
+                      style: AppFont.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AchievementUtils.getCategoryColor(category),
                       ),
-                      if (isSelected)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF2E7D32),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${unlockedAchievements.length} de $totalAchievements logros desbloqueados',
+                      style: AppFont.bodySmall.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              CircularProgressIndicator(
+                value: totalAchievements > 0
+                    ? unlockedAchievements.length / totalAchievements
+                    : 0,
+                backgroundColor: Colors.grey[200],
+                color: AchievementUtils.getCategoryColor(category),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Logros desbloqueados
+        if (unlockedAchievements.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Desbloqueados',
+                style: AppFont.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: forestDepth,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...unlockedAchievements.map(
+                (achievement) {
+                  final isEquipped = _currentUser.title == achievement.title;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AchievementCard(
+                      achievement: achievement,
+                      isUnlocked: true,
+                      isEquipped: isEquipped,
+                      onEquip: isEquipped
+                          ? null
+                          : () => _equipAchievement(achievement),
+                      onTap: () => _showAchievementDetails(achievement, true),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+
+        // Logros por desbloquear
+        if (lockedAchievements.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Por Desbloquear',
+                style: AppFont.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: forestDepth,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...lockedAchievements.map(
+                (achievement) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AchievementCard(
+                    achievement: achievement,
+                    isUnlocked: false,
+                    isEquipped: false,
+                    onTap: () => _showAchievementDetails(achievement, false),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  void _showAchievementDetails(Achievement achievement, bool isUnlocked) {
+    final levelColor = AchievementUtils.getLevelColor(achievement.level);
+    final levelName = AchievementUtils.getLevelName(achievement.level);
+    final categoryName = AchievementUtils.getCategoryName(achievement.category);
+    final categoryColor =
+        AchievementUtils.getCategoryColor(achievement.category);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: blancoHueso,
+        title: Row(
+          children: [
+            Text(achievement.icon, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                achievement.title,
+                style: AppFont.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: forestDepth,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              achievement.description,
+              style: AppFont.bodyMedium.copyWith(color: Colors.grey[700]),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Información del logro
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: verdeGelido,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildDetailItem(
+                          'Categoría', categoryName, categoryColor),
+                      _buildDetailItem('Nivel', levelName, levelColor),
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // Título
-                  Text(
-                    achievement['title'],
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isUnlocked
-                          ? (isSelected
-                              ? const Color(0xFF2E7D32)
-                              : Colors.black87)
-                          : Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-
-                  // Estado
-                  Text(
-                    isUnlocked ? 'Desbloqueado' : 'Bloqueado',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isUnlocked ? const Color(0xFF2E7D32) : Colors.grey,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildDetailItem('Puntos',
+                          '+${achievement.requiredPoints}', goldenSun),
+                      _buildDetailItem(
+                          'Progreso',
+                          isUnlocked
+                              ? 'Completado'
+                              : '${achievement.currentProgress}/${achievement.totalRequired}',
+                          isUnlocked ? freshMint : sunflower),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            // Overlay para logros bloqueados
-            if (!isUnlocked)
-              Positioned.fill(
+            // Descripción adicional si está desbloqueado
+            if (isUnlocked && achievement.unlockedDescription != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
                 child: Container(
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
+                    color: freshMint.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: freshMint.withOpacity(0.3)),
                   ),
-                  child: const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.lock,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Bloqueado',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info, size: 20, color: freshMint),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          achievement.unlockedDescription!,
+                          style: AppFont.bodySmall.copyWith(
+                            color: emeraldLeaf,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Botón para equipar si está desbloqueado y no está equipado
+            if (isUnlocked && _currentUser.title != achievement.title)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _equipAchievement(achievement);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: achievement.colorValue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
+                    icon: const Icon(Icons.workspace_premium, size: 18),
+                    label: const Text('Usar como título'),
                   ),
                 ),
               ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildDetailItem(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppFont.bodySmall.copyWith(
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: AppFont.bodyMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  AchievementCategory _getCategoryFromName(String name) {
+    switch (name.toLowerCase()) {
+      case 'cultivo':
+        return AchievementCategory.cultivo;
+      case 'hábitos':
+      case 'habitos':
+        return AchievementCategory.habitos;
+      case 'dedicación':
+      case 'dedicacion':
+        return AchievementCategory.dedicacion;
+      case 'habilidad':
+        return AchievementCategory.habilidad;
+      case 'social':
+        return AchievementCategory.social;
+      case 'colección':
+      case 'coleccion':
+        return AchievementCategory.coleccion;
+      default:
+        return AchievementCategory.cultivo;
+    }
   }
 }
