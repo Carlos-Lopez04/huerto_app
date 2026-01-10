@@ -1,3 +1,4 @@
+// screens/achievements_screen.dart - Versión simplificada
 import 'package:flutter/material.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/models/achievement_model.dart';
@@ -26,6 +27,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late UserModel _currentUser;
+
   List<Achievement> _allAchievements = [];
   String _selectedTitle = '';
 
@@ -36,11 +38,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   void initState() {
     super.initState();
     _currentUser = widget.user;
-    _selectedTitle = _currentUser.title;
-
-    // Inicializar con logros de ejemplo
+    _selectedTitle = _currentUser.selectedTitle ?? '';
     _allAchievements = AchievementUtils.getSampleAchievements();
-
     _tabController = TabController(
       length: AchievementCategory.values.length,
       vsync: this,
@@ -78,13 +77,12 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
   // Equipar un logro como título
   void _equipAchievement(Achievement achievement) {
-    final updatedUser = _currentUser.equipAchievement(achievement.id);
     setState(() {
-      _currentUser = updatedUser;
+      _currentUser = _currentUser.equipTitle(achievement.title);
       _selectedTitle = achievement.title;
     });
 
-    widget.onUserUpdated(updatedUser);
+    widget.onUserUpdated(_currentUser);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -119,7 +117,6 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final userStats = _currentUser.stats;
     final categories = AchievementUtils.getSampleCategories();
 
     return Scaffold(
@@ -132,7 +129,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         backgroundColor: forestDepth,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(_currentUser),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -142,9 +139,12 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           unselectedLabelColor: Colors.white70,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: categories.map((category) {
+            final categoryEnum = _getCategoryFromName(category.name);
+            final unlocked =
+                _getUnlockedAchievementsByCategory(categoryEnum).length;
+            final total = _getAchievementsByCategory(categoryEnum).length;
             return Tab(
-              text:
-                  '${category.displayName} (${category.unlockedAchievements}/${category.totalAchievements})',
+              text: '${category.displayName} ($unlocked/$total)',
             );
           }).toList(),
         ),
@@ -156,14 +156,14 @@ class _AchievementsScreenState extends State<AchievementsScreen>
             padding: const EdgeInsets.all(16),
             child: ProgressWidget(
               currentPoints: _currentUser.totalPoints,
-              currentLevel: _currentUser.calculatedLevel,
+              currentLevel: _currentUser.level,
               progress: _currentUser.levelProgress,
               title: 'Tu Progreso de Nivel',
             ),
           ),
 
           // Estadísticas rápidas
-          _buildQuickStats(userStats),
+          _buildQuickStats(),
 
           // Pestañas de logros
           Expanded(
@@ -185,7 +185,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildQuickStats(Map<String, dynamic> stats) {
+  Widget _buildQuickStats() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -206,7 +206,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ),
           _buildStatItem(
             label: 'Logros',
-            value: '${_currentUser.achievements.length}',
+            value: '${_currentUser.unlockedAchievementsCount}',
             icon: Icons.emoji_events,
             color: freshMint,
           ),
@@ -218,7 +218,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ),
           _buildStatItem(
             label: 'Actividades',
-            value: '${stats['totalActivities']}',
+            value: '${_currentUser.totalActivitiesCompleted}',
             icon: Icons.checklist,
             color: berryPink,
           ),
@@ -340,7 +340,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               const SizedBox(height: 8),
               ...unlockedAchievements.map(
                 (achievement) {
-                  final isEquipped = _currentUser.title == achievement.title;
+                  final isEquipped = _selectedTitle == achievement.title;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: AchievementCard(
@@ -492,7 +492,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               ),
 
             // Botón para equipar si está desbloqueado y no está equipado
-            if (isUnlocked && _currentUser.title != achievement.title)
+            if (isUnlocked && _selectedTitle != achievement.title)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: SizedBox(

@@ -1,3 +1,4 @@
+// home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/config/widgets/cards_custom.dart';
@@ -10,6 +11,7 @@ import 'package:huerto_app/screens/achievements_screen.dart';
 import 'package:huerto_app/config/widgets/bottom_nav_custom.dart';
 import 'package:huerto_app/config/widgets/progress_widget.dart';
 import 'package:huerto_app/models/user_model.dart';
+import 'package:huerto_app/services/activity_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Método para navegar a actividades
+  // Método para navegar a actividades - ACTUALIZADO
   void _navigateToActivities(BuildContext context) {
     Navigator.push(
       context,
@@ -83,7 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onUserUpdated: (updatedUser) {
             MenuApp.updateUser(updatedUser);
             setState(() {});
-            _showPointsNotification(15); // Simular puntos ganados
+            // Mostrar notificación de logros nuevos
+            _showAchievementNotificationsIfAny(updatedUser);
           },
         ),
       ),
@@ -106,8 +109,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Mostrar notificaciones de logros si hay nuevos
+  void _showAchievementNotificationsIfAny(UserModel user) {
+    final previousAchievements =
+        MenuApp.currentUser.completedAchievementIds.length;
+    final newAchievements = user.completedAchievementIds.length;
+
+    if (newAchievements > previousAchievements) {
+      _showPointsNotification(25, '¡Nuevo logro desbloqueado!');
+    }
+  }
+
   // Mostrar notificación de puntos
-  void _showPointsNotification(int points) {
+  void _showPointsNotification(int points, [String? message]) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: freshMint,
@@ -115,12 +129,53 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.star, color: Colors.white),
             const SizedBox(width: 8),
-            Text('+$points puntos ganados!'),
+            Text(message ?? '+$points puntos ganados!'),
           ],
         ),
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  // Método para completar actividad rápidamente - ACTUALIZADO
+  void _completeQuickActivity(String activityId, int points) {
+    // Usar el servicio actualizado
+    final (updatedUser, newAchievements) =
+        ActivityService.registerActivityComplete(
+            MenuApp.currentUser, activityId);
+
+    // Actualizar usuario
+    MenuApp.updateUser(updatedUser);
+    setState(() {});
+
+    // Mostrar notificación de puntos
+    _showPointsNotification(points);
+
+    // Mostrar notificaciones de logros nuevos
+    if (newAchievements.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        for (final achievement in newAchievements) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: achievement.colorValue,
+              content: Row(
+                children: [
+                  Text(achievement.icon, style: const TextStyle(fontSize: 20)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '¡Nuevo logro: ${achievement.title}!',
+                      style: AppFont.bodyMedium.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    }
   }
 
   // Manejo de la navegación del bottom bar
@@ -246,11 +301,11 @@ class _HomeScreenState extends State<HomeScreen> {
               CustomCards.calendarioSiembra(context),
               const SizedBox(height: 16),
 
-              // Actividades rápidas
+              // Actividades rápidas - ACTUALIZADO
               _buildQuickActivities(),
               const SizedBox(height: 16),
 
-              // Estadísticas rápidas
+              // Estadísticas rápidas - ACTUALIZADO
               _buildQuickStats(user),
             ],
           ),
@@ -269,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLevelProgress(UserModel user) {
     return ProgressWidget(
       currentPoints: user.totalPoints,
-      currentLevel: user.calculatedLevel,
+      currentLevel: user.level,
       progress: user.levelProgress,
       title: 'Tu Progreso',
     );
@@ -393,7 +448,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget para actividades rápidas
+  // Widget para actividades rápidas - ACTUALIZADO
   Widget _buildQuickActivities() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -423,39 +478,45 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildQuickActivityButton(
-                '🌱 Plantar Semilla',
-                'Planta una nueva semilla',
-                25,
-                freshMint,
-                'plant_seed',
-              ),
-              _buildQuickActivityButton(
-                '💧 Regar Plantas',
-                'Cuida tus plantas',
-                10,
-                clearBlue,
-                'water_plant',
-              ),
-              _buildQuickActivityButton(
-                '📅 Login Diario',
-                'Mantén tu racha',
-                5,
-                sunflower,
-                'daily_login',
-              ),
-              _buildQuickActivityButton(
-                '📤 Compartir',
-                'Comparte tu progreso',
-                15,
-                berryPink,
-                'share_garden',
-              ),
-            ],
+          SizedBox(
+            height: 280,
+            child: GridView.count(
+              physics: const ClampingScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.8,
+              children: [
+                _buildQuickActivityButton(
+                  '🌱 Plantar Semilla',
+                  'Planta una nueva semilla',
+                  25,
+                  freshMint,
+                  'plant_seed',
+                ),
+                _buildQuickActivityButton(
+                  '💧 Regar Plantas',
+                  'Cuida tus plantas',
+                  10,
+                  clearBlue,
+                  'water_plant',
+                ),
+                _buildQuickActivityButton(
+                  '📅 Login Diario',
+                  'Mantén tu racha',
+                  5,
+                  sunflower,
+                  'daily_login',
+                ),
+                _buildQuickActivityButton(
+                  '📤 Compartir',
+                  'Comparte tu progreso',
+                  15,
+                  berryPink,
+                  'share_garden',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -470,16 +531,11 @@ class _HomeScreenState extends State<HomeScreen> {
     String activityId,
   ) {
     final user = MenuApp.currentUser;
-    final count = user.activityCounts[activityId] ?? 0;
+    // Usar el nuevo método getActivityCount
+    final count = user.getActivityCount(activityId);
 
     return GestureDetector(
-      onTap: () {
-        final updatedUser = user.registerActivity(activityId, points);
-        MenuApp.updateUser(updatedUser);
-        setState(() {});
-
-        _showPointsNotification(points);
-      },
+      onTap: () => _completeQuickActivity(activityId, points),
       child: Container(
         padding: const EdgeInsets.all(12),
         width: MediaQuery.of(context).size.width * 0.43,
@@ -550,7 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '$count veces',
+                  count > 0 ? '$count veces' : 'Nunca',
                   style: AppFont.bodySmall.copyWith(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -565,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget para estadísticas rápidas
+  // Widget para estadísticas rápidas - ACTUALIZADO
   Widget _buildQuickStats(UserModel user) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -620,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: AppFont.bodySmall.copyWith(color: forestDepth),
               ),
               Text(
-                user.rank,
+                user.displayRank,
                 style: AppFont.bodySmall.copyWith(
                   color: emeraldLeaf,
                   fontWeight: FontWeight.bold,

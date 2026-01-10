@@ -1,19 +1,23 @@
-// widgets/avatar_widget.dart
+// config/widgets/avatar_widget.dart - VERSIÓN CORREGIDA
 import 'package:flutter/material.dart';
-import 'package:huerto_app/models/avatar_model.dart';
+import 'package:huerto_app/models/user_model.dart';
 
 class AvatarWidget extends StatelessWidget {
-  final AvatarModel avatar;
+  final UserModel user;
   final double size;
+  final Color? borderColor;
+  final double borderWidth;
   final bool showBorder;
-  final Color borderColor;
+  final bool showEffects;
 
   const AvatarWidget({
     super.key,
-    required this.avatar,
-    this.size = 100.0,
-    this.showBorder = true,
-    this.borderColor = const Color(0xFF2E7D32),
+    required this.user,
+    this.size = 100,
+    this.borderColor,
+    this.borderWidth = 3,
+    this.showBorder = false,
+    this.showEffects = true,
   });
 
   @override
@@ -23,159 +27,224 @@ class AvatarWidget extends StatelessWidget {
       height: size,
       decoration: showBorder
           ? BoxDecoration(
-              color: avatar.skinColor,
               shape: BoxShape.circle,
               border: Border.all(
-                color: borderColor,
-                width: size * 0.03,
+                color: borderColor ?? Colors.green,
+                width: borderWidth,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              boxShadow: showEffects
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             )
-          : BoxDecoration(
-              color: avatar.skinColor,
+          : null,
+      child: ClipOval(
+        child: _buildAvatar(),
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    // Si el avatar está personalizado, mostrar versión personalizada
+    if (_shouldShowCustomizedAvatar()) {
+      return _buildCustomizedAvatar();
+    }
+
+    // Si no está personalizado, mostrar imagen normal
+    return _buildNormalAvatar();
+  }
+
+  // Determinar si mostrar avatar personalizado
+  bool _shouldShowCustomizedAvatar() {
+    return user.isAvatarCustomized ||
+        user.usesCustomAvatar ||
+        user.hasCustomSkinColor ||
+        user.hasCustomHairColor ||
+        user.hasCustomEyeColor ||
+        user.hasCustomGlasses;
+  }
+
+  Widget _buildNormalAvatar() {
+    return Image.asset(
+      _avatarImagePath,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildFallbackAvatar();
+      },
+    );
+  }
+
+  Widget _buildCustomizedAvatar() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Imagen base
+        _buildNormalAvatar(),
+
+        // 2. Overlay de color de piel (sutil) - SIEMPRE aplicarlo si es personalizado
+        if (user.hasCustomSkinColor)
+          Container(
+            decoration: BoxDecoration(
+              color: _getSkinOverlayColor(),
               shape: BoxShape.circle,
             ),
-      child: Stack(
-        children: [
-          // Cabello
+          ),
+
+        // 3. Overlay de cabello (sutil)
+        if (user.hasCustomHairColor)
           Positioned(
             top: size * 0.05,
             left: size * 0.1,
             right: size * 0.1,
             child: Container(
-              height: size * 0.25,
+              height: size * 0.4,
               decoration: BoxDecoration(
-                color: avatar.hairColor,
+                color: _getHairOverlayColor(),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(size * 0.15),
-                  topRight: Radius.circular(size * 0.15),
-                  bottomLeft: Radius.circular(size * 0.05),
-                  bottomRight: Radius.circular(size * 0.05),
+                  topLeft: Radius.circular(size * 0.5),
+                  topRight: Radius.circular(size * 0.5),
+                  bottomLeft: Radius.circular(size * 0.1),
+                  bottomRight: Radius.circular(size * 0.1),
                 ),
               ),
             ),
           ),
 
-          // Ojos
+        // 4. Overlay de ojos (muy sutil)
+        if (user.hasCustomEyeColor)
           Positioned(
-            top: size * 0.35,
+            top: size * 0.4,
+            left: size * 0.35,
             child: Row(
               children: [
-                SizedBox(width: size * 0.25),
-                _buildEye(size * 0.08),
-                SizedBox(width: size * 0.1),
-                _buildEye(size * 0.08),
+                // Ojo izquierdo
+                Container(
+                  width: size * 0.08,
+                  height: size * 0.08,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _getEyeOverlayColor(),
+                  ),
+                ),
+                SizedBox(width: size * 0.14),
+                // Ojo derecho
+                Container(
+                  width: size * 0.08,
+                  height: size * 0.08,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _getEyeOverlayColor(),
+                  ),
+                ),
               ],
             ),
           ),
 
-          // Boca
-          Positioned(
-            bottom: size * 0.25,
-            left: size * 0.35,
-            child: Container(
-              width: size * 0.3,
-              height: size * 0.05,
-              decoration: BoxDecoration(
-                color: Colors.pink[300],
-                borderRadius: BorderRadius.circular(size * 0.02),
-              ),
-            ),
-          ),
-
-          // Lentes (opcional)
-          if (avatar.hasGlasses)
-            Positioned(
-              top: size * 0.33,
-              left: size * 0.2,
-              child: Container(
-                width: size * 0.6,
-                height: size * 0.1,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(
-                    color: Colors.black,
-                    width: size * 0.015,
-                  ),
-                  borderRadius: BorderRadius.circular(size * 0.05),
-                ),
-              ),
-            ),
-
-          // Decoración de rango (opcional)
-          if (avatar.outfit != null)
-            Positioned(
-              bottom: 0,
-              child: Container(
-                width: size * 0.8,
-                height: size * 0.2,
-                decoration: BoxDecoration(
-                  color: _getOutfitColor(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(size * 0.1),
-                    topRight: Radius.circular(size * 0.1),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    avatar.outfit!,
-                    style: TextStyle(
-                      fontSize: size * 0.07,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+        // 5. Lentes (si los tiene)
+        if (user.hasGlasses && showEffects) _buildGlassesEffect(),
+      ],
     );
   }
 
-  Widget _buildEye(double eyeSize) {
+  Widget _buildFallbackAvatar() {
     return Container(
-      width: eyeSize,
-      height: eyeSize,
       decoration: BoxDecoration(
-        color: avatar.eyeColor,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.black,
-          width: eyeSize * 0.15,
+        gradient: LinearGradient(
+          colors: [
+            Colors.green[100]!,
+            Colors.green[300]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
       child: Center(
-        child: Container(
-          width: eyeSize * 0.4,
-          height: eyeSize * 0.4,
-          decoration: const BoxDecoration(
-            color: Colors.black,
-            shape: BoxShape.circle,
-          ),
+        child: Icon(
+          user.gender == UserGender.femenino ? Icons.female : Icons.male,
+          size: size * 0.5,
+          color: Colors.white,
         ),
       ),
     );
   }
 
-  Color _getOutfitColor() {
-    switch (avatar.outfit) {
-      case 'Semilla':
-        return const Color(0xFF4CAF50);
-      case 'Brote':
-        return const Color(0xFF2E7D32);
-      case 'Árbol':
-        return const Color(0xFF1B5E20);
-      case 'Bosque':
-        return const Color(0xFF004D40);
-      default:
-        return const Color(0xFF4CAF50);
-    }
+  Widget _buildGlassesEffect() {
+    final eyeSpacing = size * 0.14;
+    final eyeSize = size * 0.08;
+
+    return Positioned(
+      top: size * 0.38,
+      left: size * 0.33,
+      child: Container(
+        width: eyeSize * 2 + eyeSpacing,
+        height: eyeSize * 1.5,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(eyeSize * 0.8),
+          border: Border.all(
+            color: Colors.grey[700]!.withOpacity(0.7),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // Lente izquierdo
+            Container(
+              width: eyeSize * 1.1,
+              height: eyeSize * 1.1,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.grey[100]!.withOpacity(0.1),
+                border: Border.all(
+                  color: Colors.grey[700]!.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+            ),
+            // Lente derecho
+            Container(
+              width: eyeSize * 1.1,
+              height: eyeSize * 1.1,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.grey[100]!.withOpacity(0.1),
+                border: Border.all(
+                  color: Colors.grey[700]!.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Colores de overlay (muy sutiles)
+  Color _getSkinOverlayColor() {
+    return user.skinColor.withOpacity(0.15); // Muy sutil
+  }
+
+  Color _getHairOverlayColor() {
+    return user.hairColor.withOpacity(0.25); // Un poco más visible
+  }
+
+  Color _getEyeOverlayColor() {
+    return user.eyeColor.withOpacity(0.4); // Moderadamente visible
+  }
+
+  // Getter para la ruta de la imagen
+  String get _avatarImagePath {
+    return user.gender == UserGender.femenino
+        ? 'lib/images/avatar_femenino.png'
+        : 'lib/images/avatar_masculino.png';
   }
 }

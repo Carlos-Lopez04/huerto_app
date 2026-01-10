@@ -48,44 +48,56 @@ class AchievementService {
     }
   }
 
-  // Método para verificar logros nuevos (reemplaza el de achievement_checker_service.dart)
+  // Método para verificar logros nuevos
   static List<Achievement> checkAchievements(UserModel user) {
     final sampleAchievements = AchievementUtils.getSampleAchievements();
     final List<Achievement> newAchievements = [];
 
+    // Obtener lista de IDs de logros completados
+    // (Necesitarías agregar este campo a UserModel)
+    final List<String> completedAchievementIds = [];
+
+    // Contadores de actividades (necesitarías agregar esto a UserModel o usar otro sistema)
+    final Map<String, int> activityCounts =
+        {}; // Deberías obtener esto de algún lugar
+
+    // Días consecutivos (necesitarías agregar esto a UserModel)
+    const int consecutiveDays = 0;
+
     // Verificar cada logro de muestra
     for (final achievement in sampleAchievements) {
       // Si el usuario no tiene este logro
-      if (!user.hasAchievement(achievement.id)) {
+      if (!completedAchievementIds.contains(achievement.id)) {
         // Verificar si cumple los requisitos
         switch (achievement.id) {
           case 'first_seed':
-            if ((user.activityCounts['plant_seed'] ?? 0) >= 1) {
+            if ((activityCounts['plant_seed'] ?? 0) >= 1) {
               newAchievements.add(achievement);
             }
             break;
           case 'water_master_beginner':
-            if ((user.activityCounts['water_plant'] ?? 0) >= 10) {
+            if ((activityCounts['water_plant'] ?? 0) >= 10) {
               newAchievements.add(achievement);
             }
             break;
           case 'daily_streak_3':
-            if (user.consecutiveDays >= 3) {
+            if (consecutiveDays >= 3) {
               newAchievements.add(achievement);
             }
             break;
           case 'level_2':
-            if (user.calculatedLevel >= 2) {
+            if (user.level >= 2) {
+              // Usar user.level en lugar de calculatedLevel
               newAchievements.add(achievement);
             }
             break;
           case 'social_beginner':
-            if ((user.activityCounts['share_garden'] ?? 0) >= 1) {
+            if ((activityCounts['share_garden'] ?? 0) >= 1) {
               newAchievements.add(achievement);
             }
             break;
           case 'first_harvest':
-            if ((user.activityCounts['harvest_plant'] ?? 0) >= 1) {
+            if ((activityCounts['harvest_plant'] ?? 0) >= 1) {
               newAchievements.add(achievement);
             }
             break;

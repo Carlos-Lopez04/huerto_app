@@ -1,3 +1,4 @@
+// screens/activity_tracking_screen.dart - PARTE CORREGIDA
 import 'package:flutter/material.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/models/activity_model.dart';
@@ -29,17 +30,19 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
   }
 
   void _completeActivity(String activityId) {
-    final result = ActivityService.registerActivity(_currentUser, activityId);
+    // Registrar actividad usando el servicio actualizado
+    final (updatedUser, newAchievements) =
+        ActivityService.registerActivityComplete(_currentUser, activityId);
 
     setState(() {
-      _currentUser = result.$1;
+      _currentUser = updatedUser;
     });
 
+    // Notificar cambios
     widget.onUserUpdated(_currentUser);
 
     // Mostrar notificación de puntos
-    final activity = ActivityService.getAvailableActivities()
-        .firstWhere((a) => a.id == activityId);
+    final activity = ActivityService.getActivityById(activityId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -49,7 +52,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
             const Icon(Icons.star, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(
-              '+${activity.points} puntos ganados!',
+              '+${activity?.points ?? 0} puntos ganados!',
               style: AppFont.bodyMedium.copyWith(color: Colors.white),
             ),
           ],
@@ -57,18 +60,39 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
+
+    // Mostrar notificación de logros nuevos
+    if (newAchievements.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        for (final achievement in newAchievements) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: achievement.colorValue,
+              content: Row(
+                children: [
+                  Text(achievement.icon, style: const TextStyle(fontSize: 20)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '¡Nuevo logro: ${achievement.title}!',
+                      style: AppFont.bodyMedium.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final activities = ActivityService.getAvailableActivities();
     final categorizedActivities = ActivityService.getActivitiesByCategory();
-    final statsMap = ActivityService.getActivityStats(_currentUser);
-
-    // Convertir Map a ActivityStats si es necesario, o trabajar directamente con el mapa
-    final stats = statsMap is Map<String, dynamic>
-        ? _parseStatsFromMap(statsMap)
-        : statsMap as ActivityStats;
+    final stats = ActivityService.getActivityStats(_currentUser);
 
     return Scaffold(
       backgroundColor: blancoHueso,
@@ -104,47 +128,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
     );
   }
 
-  // Método para parsear Map a ActivityStats
-  ActivityStats _parseStatsFromMap(Map<String, dynamic> map) {
-    return ActivityStats(
-      userId: map['userId'] ?? _currentUser.id,
-      totalActivities: map['totalActivities'] ?? 0,
-      totalPoints: map['totalPoints'] ?? 0,
-      activitiesByCategory:
-          Map<String, int>.from(map['activitiesByCategory'] ?? {}),
-      activitiesByDay: Map<String, int>.from(map['activitiesByDay'] ?? {}),
-      mostActiveCategory: map['mostActiveCategory'] ?? '',
-      mostActiveDay: map['mostActiveDay'] ?? '',
-      averageTimeSpent: Duration(seconds: map['averageTimeSpent'] ?? 0),
-      currentStreak: map['currentStreak'] ??
-          map['consecutiveDays'] ??
-          0, // Intenta ambos nombres
-      longestStreak: map['longestStreak'] ?? 0,
-      activitiesByDifficulty:
-          (map['activitiesByDifficulty'] as Map<String, dynamic>? ?? {}).map(
-        (key, value) => MapEntry(_parseDifficulty(key), value as int),
-      ),
-    );
-  }
-
-  ActivityDifficulty _parseDifficulty(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'fácil':
-      case 'facil':
-        return ActivityDifficulty.facil;
-      case 'medio':
-        return ActivityDifficulty.medio;
-      case 'difícil':
-      case 'dificil':
-        return ActivityDifficulty.dificil;
-      case 'experto':
-        return ActivityDifficulty.experto;
-      default:
-        return ActivityDifficulty.facil;
-    }
-  }
-
-  Widget _buildStatsCard(ActivityStats stats) {
+  Widget _buildStatsCard(Map<String, dynamic> stats) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -178,21 +162,37 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
             children: [
               _buildStatColumn(
                 'Total Actividades',
-                stats.totalActivities.toString(),
+                '${_currentUser.totalActivitiesCompleted}',
                 Icons.checklist,
               ),
               _buildStatColumn(
                 'Puntos Totales',
-                stats.totalPoints.toString(),
+                '${_currentUser.totalPoints}',
                 Icons.star,
               ),
               _buildStatColumn(
                 'Días Seguidos',
-                stats.currentStreak.toString(),
+                '${_currentUser.consecutiveDays}',
                 Icons.calendar_today,
               ),
             ],
           ),
+          if (stats['mostActiveCategory'] != 'Ninguna')
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events, size: 16, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Categoría favorita: ${stats['mostActiveCategory']}',
+                    style: AppFont.bodySmall.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -225,8 +225,9 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // CORREGIDO: Usar ActivityService.getCategoryDisplayName en lugar de _getCategoryDisplayName
         Text(
-          ActivityUtils.getCategoryName(category),
+          ActivityService.getCategoryDisplayName(category),
           style: AppFont.titleSmall.copyWith(
             fontWeight: FontWeight.bold,
             color: forestDepth,
@@ -245,7 +246,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
           itemCount: activities.length,
           itemBuilder: (context, index) {
             final activity = activities[index];
-            final count = _currentUser.activityCounts[activity.id] ?? 0;
+            final count = _currentUser.getActivityCount(activity.id);
 
             return _buildActivityCard(activity, count);
           },
@@ -256,7 +257,6 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
   }
 
   Widget _buildActivityCard(Activity activity, int count) {
-    // activity.color ya es de tipo Color
     final color = activity.color;
 
     return Card(
@@ -335,7 +335,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '$count veces',
+                      '$count ${count == 1 ? 'vez' : 'veces'}',
                       style: AppFont.bodySmall.copyWith(
                         fontWeight: FontWeight.bold,
                         color: color,

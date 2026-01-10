@@ -14,7 +14,7 @@ class AchievementCheckerService {
         // Verificar si cumple los requisitos
         switch (achievement.id) {
           case 'first_seed':
-            if ((user.activityCounts['plant_seed'] ?? 0) >= 1) {
+            if (user.getActivityCount('plant_seed') >= 1) {
               newAchievements.add(achievement);
             }
             break;
@@ -24,34 +24,62 @@ class AchievementCheckerService {
             }
             break;
           case 'total_activities_10':
-            final userActivityCount =
-                user.activityCounts.values.fold(0, (sum, count) => sum + count);
-            if (userActivityCount >= 10) {
+            if (user.totalActivitiesCompleted >= 10) {
               newAchievements.add(achievement);
             }
             break;
           case 'water_master_beginner':
-            if ((user.activityCounts['water_plant'] ?? 0) >= 10) {
+            if (user.getActivityCount('water_plant') >= 10) {
               newAchievements.add(achievement);
             }
             break;
           case 'level_2':
-            if (user.calculatedLevel >= 2) {
+            if (user.level >= 2) {
               newAchievements.add(achievement);
             }
             break;
           case 'social_beginner':
-            if ((user.activityCounts['share_garden'] ?? 0) >= 1) {
+            if (user.getActivityCount('share_garden') >= 1) {
               newAchievements.add(achievement);
             }
             break;
           case 'first_harvest':
-            if ((user.activityCounts['harvest_plant'] ?? 0) >= 1) {
+            if (user.getActivityCount('harvest_plant') >= 1) {
               newAchievements.add(achievement);
             }
             break;
           case 'plant_collector':
-            if ((user.activityCounts['plant_seed'] ?? 0) >= 3) {
+            if (user.getActivityCount('plant_seed') >= 3) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'daily_streak_7':
+            if (user.consecutiveDays >= 7) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'level_5':
+            if (user.level >= 5) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'water_master_intermediate':
+            if (user.getActivityCount('water_plant') >= 50) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'social_expert':
+            if (user.getActivityCount('share_garden') >= 10) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'harvest_master':
+            if (user.getActivityCount('harvest_plant') >= 5) {
+              newAchievements.add(achievement);
+            }
+            break;
+          case 'plant_expert':
+            if (user.getActivityCount('plant_seed') >= 10) {
               newAchievements.add(achievement);
             }
             break;
@@ -62,15 +90,35 @@ class AchievementCheckerService {
     return newAchievements;
   }
 
-  // Método para añadir logros al usuario
-  static UserModel addAchievementsToUser(
-      UserModel user, List<Achievement> achievements) {
-    UserModel updatedUser = user;
+  // Verificar logro específico
+  static bool checkSingleAchievement(UserModel user, String achievementId) {
+    if (user.hasAchievement(achievementId)) return false;
 
-    for (final achievement in achievements) {
-      updatedUser = updatedUser.addAchievement(achievement);
+    final sampleAchievements = AchievementUtils.getSampleAchievements();
+    final achievement = sampleAchievements.firstWhere(
+      (a) => a.id == achievementId,
+      orElse: () => sampleAchievements.first,
+    );
+
+    switch (achievementId) {
+      case 'first_seed':
+        return user.getActivityCount('plant_seed') >= 1;
+      case 'daily_streak_3':
+        return user.consecutiveDays >= 3;
+      case 'total_activities_10':
+        return user.totalActivitiesCompleted >= 10;
+      case 'water_master_beginner':
+        return user.getActivityCount('water_plant') >= 10;
+      case 'level_2':
+        return user.level >= 2;
+      case 'social_beginner':
+        return user.getActivityCount('share_garden') >= 1;
+      case 'first_harvest':
+        return user.getActivityCount('harvest_plant') >= 1;
+      case 'plant_collector':
+        return user.getActivityCount('plant_seed') >= 3;
+      default:
+        return false;
     }
-
-    return updatedUser;
   }
 }

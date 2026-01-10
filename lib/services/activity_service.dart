@@ -1,14 +1,14 @@
 // services/activity_service.dart
-// import 'package:flutter/material.dart';
 import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/models/activity_model.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/models/achievement_model.dart';
+import 'package:huerto_app/services/achievement_checker_service.dart';
 
 class ActivityService {
   // Definir actividades con puntos
   static final List<Activity> _activities = [
-    Activity(
+    const Activity(
       id: 'plant_seed',
       name: 'Plantar Semilla',
       description: 'Plantar una nueva semilla en tu huerto',
@@ -19,7 +19,7 @@ class ActivityService {
       maxDaily: 5,
       frequency: ActivityFrequency.diaria,
       difficulty: ActivityDifficulty.facil,
-      estimatedDuration: const Duration(minutes: 10),
+      estimatedDuration: Duration(minutes: 10),
       tags: ['cultivo', 'inicio', 'básico'],
       metadata: {
         'requiredTools': ['semillas', 'tierra', 'maceta'],
@@ -27,7 +27,7 @@ class ActivityService {
         'waterNeeds': 'medio',
       },
     ),
-    Activity(
+    const Activity(
       id: 'water_plant',
       name: 'Regar Plantas',
       description: 'Riega las plantas de tu huerto',
@@ -38,7 +38,7 @@ class ActivityService {
       maxDaily: 10,
       frequency: ActivityFrequency.diaria,
       difficulty: ActivityDifficulty.facil,
-      estimatedDuration: const Duration(minutes: 5),
+      estimatedDuration: Duration(minutes: 5),
       tags: ['riego', 'mantenimiento', 'diario'],
       metadata: {
         'waterAmount': 'moderado',
@@ -46,7 +46,7 @@ class ActivityService {
         'avoid': 'hojas mojadas por la noche',
       },
     ),
-    Activity(
+    const Activity(
       id: 'harvest_plant',
       name: 'Cosechar Planta',
       description: 'Recoge los frutos de tus plantas maduras',
@@ -57,7 +57,7 @@ class ActivityService {
       maxDaily: 3,
       frequency: ActivityFrequency.semanal,
       difficulty: ActivityDifficulty.medio,
-      estimatedDuration: const Duration(minutes: 15),
+      estimatedDuration: Duration(minutes: 15),
       tags: ['cosecha', 'recompensa', 'fructífero'],
       metadata: {
         'requires': 'planta madura',
@@ -65,7 +65,7 @@ class ActivityService {
         'tools': ['tijeras', 'canasta'],
       },
     ),
-    Activity(
+    const Activity(
       id: 'daily_login',
       name: 'Login Diario',
       description: 'Inicia sesión en la aplicación',
@@ -76,14 +76,14 @@ class ActivityService {
       maxDaily: 1,
       frequency: ActivityFrequency.diaria,
       difficulty: ActivityDifficulty.facil,
-      estimatedDuration: const Duration(seconds: 30),
+      estimatedDuration: Duration(seconds: 30),
       tags: ['hábito', 'consistencia', 'diario'],
       metadata: {
         'streakBonus': 'puntos extra por racha',
         'reminder': 'activar notificaciones',
       },
     ),
-    Activity(
+    const Activity(
       id: 'share_garden',
       name: 'Compartir Huerto',
       description: 'Comparte el progreso de tu huerto con amigos',
@@ -94,14 +94,14 @@ class ActivityService {
       maxDaily: 3,
       frequency: ActivityFrequency.diaria,
       difficulty: ActivityDifficulty.facil,
-      estimatedDuration: const Duration(minutes: 2),
+      estimatedDuration: Duration(minutes: 2),
       tags: ['social', 'compartir', 'comunidad'],
       metadata: {
         'platforms': ['whatsapp', 'instagram', 'facebook'],
         'reward': 'puntos sociales extra',
       },
     ),
-    Activity(
+    const Activity(
       id: 'complete_tutorial',
       name: 'Completar Tutorial',
       description: 'Aprende sobre el cuidado de plantas',
@@ -112,7 +112,7 @@ class ActivityService {
       maxDaily: 1,
       frequency: ActivityFrequency.unica,
       difficulty: ActivityDifficulty.facil,
-      estimatedDuration: const Duration(minutes: 20),
+      estimatedDuration: Duration(minutes: 20),
       tags: ['aprendizaje', 'tutorial', 'habilidad'],
       metadata: {
         'chapters': 5,
@@ -122,75 +122,45 @@ class ActivityService {
     ),
   ];
 
-  // Registrar actividad y devolver puntos
+  // Registrar actividad COMPLETA que incluye logros
+  static (UserModel, List<Achievement>) registerActivityComplete(
+    UserModel user,
+    String activityId,
+  ) {
+    final activity = getActivityById(activityId);
+    if (activity == null) {
+      return (user, []);
+    }
+
+    // 1. Actualizar contador de actividades
+    final updatedUser = user.updateActivityCount(activityId, 1);
+
+    // 2. Agregar puntos
+    final userWithPoints = updatedUser.addPoints(activity.points);
+
+    // 3. Marcar actividad como completada
+    final userWithActivity = userWithPoints.completeActivity(activityId);
+
+    // 4. Verificar logros nuevos
+    final newAchievements = AchievementCheckerService.checkAchievements(
+      userWithActivity,
+    );
+
+    // 5. Agregar logros nuevos al usuario
+    UserModel finalUser = userWithActivity;
+    for (final achievement in newAchievements) {
+      finalUser = finalUser.addAchievement(achievement.id);
+    }
+
+    return (finalUser, newAchievements);
+  }
+
+  // Método simplificado para compatibilidad
   static (UserModel, List<Achievement>) registerActivity(
     UserModel user,
     String activityId,
   ) {
-    final activity = _activities.firstWhere(
-      (a) => a.id == activityId,
-      orElse: () => _activities.first,
-    );
-
-    // Registrar actividad
-    final updatedUser = user.registerActivity(activityId, activity.points);
-
-    // Verificar logros
-    final newAchievements = _checkAchievements(updatedUser);
-
-    return (updatedUser, newAchievements);
-  }
-
-  // Método temporal para verificar logros
-  static List<Achievement> _checkAchievements(UserModel user) {
-    final sampleAchievements = AchievementUtils.getSampleAchievements();
-    final List<Achievement> newAchievements = [];
-
-    for (final achievement in sampleAchievements) {
-      if (!user.hasAchievement(achievement.id)) {
-        // Lógica simple de verificación
-        switch (achievement.id) {
-          case 'first_seed':
-            if ((user.activityCounts['plant_seed'] ?? 0) >= 1) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'water_master_beginner':
-            if ((user.activityCounts['water_plant'] ?? 0) >= 10) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'daily_streak_3':
-            if (user.consecutiveDays >= 3) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'level_2':
-            if (user.calculatedLevel >= 2) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'social_beginner':
-            if ((user.activityCounts['share_garden'] ?? 0) >= 1) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'first_harvest':
-            if ((user.activityCounts['harvest_plant'] ?? 0) >= 1) {
-              newAchievements.add(achievement);
-            }
-            break;
-          case 'plant_collector':
-            // CORRECCIÓN: Agregar paréntesis para precedencia correcta
-            if ((user.activityCounts['plant_seed'] ?? 0) >= 2) {
-              newAchievements.add(achievement);
-            }
-            break;
-        }
-      }
-    }
-
-    return newAchievements;
+    return registerActivityComplete(user, activityId);
   }
 
   // Obtener actividad por ID
@@ -207,9 +177,9 @@ class ActivityService {
     return List<Activity>.from(_activities);
   }
 
-  // Obtener actividades disponibles
+  // Obtener actividades disponibles (simplificado)
   static List<Activity> getAvailableActivities() {
-    return _activities.where((activity) => activity.isAvailable).toList();
+    return _activities;
   }
 
   // Obtener actividades por categoría
@@ -234,64 +204,32 @@ class ActivityService {
     return byDifficulty;
   }
 
-  // Obtener actividades recomendadas para un usuario
+  // Obtener actividades recomendadas para un usuario (simplificado)
   static List<Activity> getRecommendedActivities({
     required UserModel user,
     int limit = 6,
   }) {
-    final completedIds = user.activityCounts.keys.toList();
-    final allActivities = getAvailableActivities();
-
     // Filtrar actividades no completadas
-    var recommended = allActivities
-        .where((activity) => !completedIds.contains(activity.id))
+    var recommended = _activities
+        .where((activity) => !user.completedActivityIds.contains(activity.id))
         .toList();
 
-    // Ordenar por dificultad apropiada
-    recommended.sort((a, b) {
-      final aDiff = _difficultyValue(a.difficulty);
-      final bDiff = _difficultyValue(b.difficulty);
-      final userLevel = _getUserDifficultyLevel(user);
-
-      final aDistance = (aDiff - userLevel).abs();
-      final bDistance = (bDiff - userLevel).abs();
-
-      return aDistance.compareTo(bDistance);
-    });
+    // Si no hay suficientes, incluir algunas ya completadas
+    if (recommended.length < limit) {
+      final completed = _activities
+          .where((activity) => user.completedActivityIds.contains(activity.id))
+          .take(limit - recommended.length)
+          .toList();
+      recommended.addAll(completed);
+    }
 
     // Limitar resultados
     return recommended.take(limit).toList();
   }
 
-  // Calcular nivel de dificultad del usuario
-  static int _getUserDifficultyLevel(UserModel user) {
-    final totalPoints = user.totalPoints;
-    if (totalPoints < 100) return 1; // Fácil
-    if (totalPoints < 300) return 2; // Medio
-    if (totalPoints < 600) return 3; // Difícil
-    return 4; // Experto
-  }
-
-  // Convertir dificultad a valor numérico
-  static int _difficultyValue(ActivityDifficulty difficulty) {
-    switch (difficulty) {
-      case ActivityDifficulty.facil:
-        return 1;
-      case ActivityDifficulty.medio:
-        return 2;
-      case ActivityDifficulty.dificil:
-        return 3;
-      case ActivityDifficulty.experto:
-        return 4;
-    }
-  }
-
-  // Obtener estadísticas de actividades
+  // Obtener estadísticas de actividades simplificadas
   static Map<String, dynamic> getActivityStats(UserModel user) {
-    final totalActivities =
-        user.activityCounts.values.fold(0, (sum, count) => sum + count);
-    final totalPoints = user.totalPoints;
-    final level = user.calculatedLevel;
+    final totalActivities = user.totalActivitiesCompleted;
 
     // Calcular actividad más común
     String mostCommonActivity = 'Ninguna';
@@ -299,78 +237,89 @@ class ActivityService {
     user.activityCounts.forEach((activityId, count) {
       if (count > maxCount) {
         maxCount = count;
-        mostCommonActivity = getActivityById(activityId)?.name ?? activityId;
+        final activity = getActivityById(activityId);
+        mostCommonActivity = activity?.name ?? activityId;
       }
     });
 
-    // Calcular días activos esta semana
-    final weekActivities = user.dailyActivities.where((daily) {
-      final now = DateTime.now();
-      final weekAgo = now.subtract(const Duration(days: 7));
-      return daily.date.isAfter(weekAgo);
-    }).length;
+    // Calcular categoría más activa
+    String mostActiveCategory = 'Ninguna';
+    int maxCategoryCount = 0;
+    final Map<String, int> categoryCounts = {};
+
+    for (final entry in user.activityCounts.entries) {
+      final activity = getActivityById(entry.key);
+      if (activity != null) {
+        final categoryName = getCategoryDisplayName(activity.category);
+        categoryCounts[categoryName] =
+            (categoryCounts[categoryName] ?? 0) + entry.value;
+      }
+    }
+
+    categoryCounts.forEach((category, count) {
+      if (count > maxCategoryCount) {
+        maxCategoryCount = count;
+        mostActiveCategory = category;
+      }
+    });
 
     return {
       'totalActivities': totalActivities,
-      'totalPoints': totalPoints,
-      'level': level,
+      'totalPoints': user.totalPoints,
+      'level': user.level,
       'levelProgress': user.levelProgress,
       'mostCommonActivity': mostCommonActivity,
+      'mostActiveCategory': mostActiveCategory,
       'activityCounts': user.activityCounts,
       'consecutiveDays': user.consecutiveDays,
-      'daysActiveThisWeek': weekActivities,
-      'pointsPerDay': user.consecutiveDays > 0
-          ? totalPoints / user.consecutiveDays
-          : totalPoints,
-      'hasLoggedInToday': user.hasLoggedInToday,
+      'unlockedAchievements': user.unlockedAchievementsCount,
     };
   }
 
-  // Obtener actividades completadas hoy
-  static List<String> getTodayActivities(UserModel user) {
-    final today = DateTime.now();
-    final todayActivity = user.dailyActivities.firstWhere(
-      (daily) =>
-          daily.date.year == today.year &&
-          daily.date.month == today.month &&
-          daily.date.day == today.day,
-      orElse: () => DailyActivity(
-        date: today,
-        activities: [],
-        totalPoints: 0,
-      ),
-    );
-
-    return todayActivity.activities;
-  }
-
-  // Obtener puntos ganados hoy
-  static int getTodayPoints(UserModel user) {
-    final today = DateTime.now();
-    final todayActivity = user.dailyActivities.firstWhere(
-      (daily) =>
-          daily.date.year == today.year &&
-          daily.date.month == today.month &&
-          daily.date.day == today.day,
-      orElse: () => DailyActivity(
-        date: today,
-        activities: [],
-        totalPoints: 0,
-      ),
-    );
-
-    return todayActivity.totalPoints;
+  // Método público para obtener nombre de categoría - CORREGIDO
+  static String getCategoryDisplayName(ActivityCategory category) {
+    switch (category) {
+      case ActivityCategory.cultivo:
+        return 'Cultivo';
+      case ActivityCategory.habitos:
+        return 'Hábitos';
+      case ActivityCategory.social:
+        return 'Social';
+      case ActivityCategory.habilidad:
+        return 'Habilidad';
+      case ActivityCategory.misiones:
+        return 'Misiones';
+      case ActivityCategory.riego:
+        return 'Riego';
+      case ActivityCategory.cosecha:
+        return 'Cosecha';
+      case ActivityCategory.mantenimiento:
+        return 'Mantenimiento';
+    }
   }
 
   // Verificar si una actividad puede realizarse hoy
-  static bool canPerformActivityToday(UserModel user, String activityId) {
+  static bool canPerformActivityToday(
+    UserModel user,
+    String activityId,
+  ) {
     final activity = getActivityById(activityId);
     if (activity == null) return false;
 
-    // Verificar límite diario
-    final todayActivities = getTodayActivities(user);
-    final countToday = todayActivities.where((id) => id == activityId).length;
+    // Verificar límite diario basado en fecha de última actividad
+    final today = DateTime.now();
+    final lastActivityDate = user.lastActivityDate;
 
+    // Si la última actividad no fue hoy, reiniciar contadores
+    if (lastActivityDate == null ||
+        lastActivityDate.year != today.year ||
+        lastActivityDate.month != today.month ||
+        lastActivityDate.day != today.day) {
+      return true; // Nuevo día, puede realizar
+    }
+
+    // Verificar contador del día actual (simplificado)
+    final countToday = user.getActivityCount(activityId);
     return countToday < activity.maxDaily;
   }
 
@@ -382,9 +331,7 @@ class ActivityService {
 
     return sortedEntries
         .take(limit)
-        .map((entry) {
-          return getActivityById(entry.key);
-        })
+        .map((entry) => getActivityById(entry.key))
         .where((activity) => activity != null)
         .cast<Activity>()
         .toList();

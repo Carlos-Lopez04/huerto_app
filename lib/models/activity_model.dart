@@ -1,6 +1,7 @@
 // models/activity_model.dart
 import 'package:flutter/material.dart';
 import 'package:huerto_app/themes/app_theme.dart';
+// import 'package:huerto_app/models/user_model.dart';
 
 // Enumeración para categorías de actividades
 enum ActivityCategory {
@@ -29,6 +30,234 @@ enum ActivityDifficulty {
   medio,
   dificil,
   experto,
+}
+
+// // Enumeración para género del usuario
+enum UserGender {
+  masculino,
+  femenino,
+  otro,
+}
+
+// Modelo para perfil de usuario
+class UserProfile {
+  final String id;
+  final String name;
+  final String email;
+  final UserGender gender;
+  final String? avatarPath;
+  final DateTime createdAt;
+  final int totalPoints;
+  final int level;
+  final Map<String, dynamic>? preferences;
+  final List<String> completedActivityIds;
+  final List<String> favoriteActivityIds;
+
+  const UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.gender,
+    this.avatarPath,
+    required this.createdAt,
+    this.totalPoints = 0,
+    this.level = 1,
+    this.preferences,
+    this.completedActivityIds = const [],
+    this.favoriteActivityIds = const [],
+  });
+
+  // Getter para obtener la ruta del avatar basado en el género
+  String get avatarImagePath {
+    if (avatarPath != null && avatarPath!.isNotEmpty) {
+      return avatarPath!;
+    }
+
+    // Si no hay avatar personalizado, usar el predeterminado por género
+    switch (gender) {
+      case UserGender.masculino:
+        return 'lib/images/avatar_masculino.png';
+      case UserGender.femenino:
+        return 'lib/images/avatar_femenino.png';
+      case UserGender.otro:
+        return 'lib/images/avatar_masculino.png'; // Predeterminado
+    }
+  }
+
+  // Getter para avatar predeterminado según género
+  static String getDefaultAvatar(UserGender gender) {
+    switch (gender) {
+      case UserGender.masculino:
+        return 'lib/images/avatar_masculino.png';
+      case UserGender.femenino:
+        return 'lib/images/avatar_femenino.png';
+      case UserGender.otro:
+        return 'lib/images/avatar_masculino.png';
+    }
+  }
+
+  // Getter para nombre de género
+  String get displayGender {
+    switch (gender) {
+      case UserGender.masculino:
+        return 'Masculino';
+      case UserGender.femenino:
+        return 'Femenino';
+      case UserGender.otro:
+        return 'Otro';
+    }
+  }
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      gender: _parseGender(json['gender'] ?? ''),
+      avatarPath: json['avatarPath'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      totalPoints: json['totalPoints'] ?? 0,
+      level: json['level'] ?? 1,
+      preferences: json['preferences'] != null
+          ? Map<String, dynamic>.from(json['preferences'])
+          : null,
+      completedActivityIds:
+          List<String>.from(json['completedActivityIds'] ?? []),
+      favoriteActivityIds: List<String>.from(json['favoriteActivityIds'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'gender': _getGenderString(gender),
+      'avatarPath': avatarPath,
+      'createdAt': createdAt.toIso8601String(),
+      'totalPoints': totalPoints,
+      'level': level,
+      'preferences': preferences,
+      'completedActivityIds': completedActivityIds,
+      'favoriteActivityIds': favoriteActivityIds,
+    };
+  }
+
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    String? email,
+    UserGender? gender,
+    String? avatarPath,
+    DateTime? createdAt,
+    int? totalPoints,
+    int? level,
+    Map<String, dynamic>? preferences,
+    List<String>? completedActivityIds,
+    List<String>? favoriteActivityIds,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      gender: gender ?? this.gender,
+      avatarPath: avatarPath ?? this.avatarPath,
+      createdAt: createdAt ?? this.createdAt,
+      totalPoints: totalPoints ?? this.totalPoints,
+      level: level ?? this.level,
+      preferences: preferences ?? this.preferences,
+      completedActivityIds: completedActivityIds ?? this.completedActivityIds,
+      favoriteActivityIds: favoriteActivityIds ?? this.favoriteActivityIds,
+    );
+  }
+
+  static UserGender _parseGender(String gender) {
+    switch (gender.toLowerCase()) {
+      case 'masculino':
+      case 'male':
+        return UserGender.masculino;
+      case 'femenino':
+      case 'female':
+        return UserGender.femenino;
+      case 'otro':
+      case 'other':
+        return UserGender.otro;
+      default:
+        return UserGender.masculino;
+    }
+  }
+
+  static String _getGenderString(UserGender gender) {
+    switch (gender) {
+      case UserGender.masculino:
+        return 'masculino';
+      case UserGender.femenino:
+        return 'femenino';
+      case UserGender.otro:
+        return 'otro';
+    }
+  }
+
+  // Método para agregar puntos
+  UserProfile addPoints(int points) {
+    final newTotalPoints = totalPoints + points;
+    final newLevel = calculateLevel(newTotalPoints);
+
+    return copyWith(
+      totalPoints: newTotalPoints,
+      level: newLevel,
+    );
+  }
+
+  // Método para marcar actividad como completada
+  UserProfile completeActivity(String activityId) {
+    final newCompletedIds = List<String>.from(completedActivityIds);
+    if (!newCompletedIds.contains(activityId)) {
+      newCompletedIds.add(activityId);
+    }
+
+    return copyWith(
+      completedActivityIds: newCompletedIds,
+    );
+  }
+
+  // Método para alternar favorito
+  UserProfile toggleFavorite(String activityId) {
+    final newFavoriteIds = List<String>.from(favoriteActivityIds);
+    if (newFavoriteIds.contains(activityId)) {
+      newFavoriteIds.remove(activityId);
+    } else {
+      newFavoriteIds.add(activityId);
+    }
+
+    return copyWith(
+      favoriteActivityIds: newFavoriteIds,
+    );
+  }
+
+  // Calcular nivel basado en puntos
+  static int calculateLevel(int points) {
+    // Cada 100 puntos sube un nivel
+    return (points / 100).floor() + 1;
+  }
+
+  // Obtener progreso hacia el siguiente nivel
+  double get levelProgress {
+    final pointsForCurrentLevel = (level - 1) * 100;
+    final pointsForNextLevel = level * 100;
+    final pointsInLevel = totalPoints - pointsForCurrentLevel;
+    final pointsNeeded = pointsForNextLevel - pointsForCurrentLevel;
+
+    return pointsInLevel / pointsNeeded;
+  }
+
+  // Puntos necesarios para el siguiente nivel
+  int get pointsToNextLevel {
+    final pointsForNextLevel = level * 100;
+    return pointsForNextLevel - totalPoints;
+  }
 }
 
 // Modelo principal de actividad
@@ -568,24 +797,24 @@ class ActivityUtils {
 
   // Método para obtener nombre de color
   static String getColorString(Color color) {
-    if (color.value == freshMint.value) return 'freshMint';
-    if (color.value == clearBlue.value) return 'clearBlue';
-    if (color.value == sunflower.value) return 'sunflower';
-    if (color.value == goldenSun.value) return 'goldenSun';
-    if (color.value == berryPink.value) return 'berryPink';
-    if (color.value == emeraldLeaf.value) return 'emeraldLeaf';
-    if (color.value == forestDepth.value) return 'forestDepth';
-    if (color.value == tomatoRed.value) return 'tomatoRed';
-    if (color.value == oceanMist.value) return 'oceanMist';
-    if (color.value == lightSage.value) return 'lightSage';
-    if (color.value == springGrass.value) return 'springGrass';
+    if (color == freshMint) return 'freshMint';
+    if (color == clearBlue) return 'clearBlue';
+    if (color == sunflower) return 'sunflower';
+    if (color == goldenSun) return 'goldenSun';
+    if (color == berryPink) return 'berryPink';
+    if (color == emeraldLeaf) return 'emeraldLeaf';
+    if (color == forestDepth) return 'forestDepth';
+    if (color == tomatoRed) return 'tomatoRed';
+    if (color == oceanMist) return 'oceanMist';
+    if (color == lightSage) return 'lightSage';
+    if (color == springGrass) return 'springGrass';
     return 'freshMint';
   }
 
   // Obtener todas las actividades de ejemplo
   static List<Activity> getSampleActivities() {
     return [
-      Activity(
+      const Activity(
         id: 'plant_seed',
         name: 'Plantar Semilla',
         description: 'Planta una nueva semilla en tu huerto',
@@ -596,7 +825,7 @@ class ActivityUtils {
         maxDaily: 5,
         frequency: ActivityFrequency.diaria,
         difficulty: ActivityDifficulty.facil,
-        estimatedDuration: const Duration(minutes: 10),
+        estimatedDuration: Duration(minutes: 10),
         tags: ['cultivo', 'inicio', 'básico'],
         tutorialUrl: 'https://ejemplo.com/tutorial/plantar',
         metadata: {
@@ -605,7 +834,7 @@ class ActivityUtils {
           'waterNeeds': 'medio',
         },
       ),
-      Activity(
+      const Activity(
         id: 'water_plant',
         name: 'Regar Plantas',
         description: 'Riega las plantas de tu huerto',
@@ -616,7 +845,7 @@ class ActivityUtils {
         maxDaily: 10,
         frequency: ActivityFrequency.diaria,
         difficulty: ActivityDifficulty.facil,
-        estimatedDuration: const Duration(minutes: 5),
+        estimatedDuration: Duration(minutes: 5),
         tags: ['riego', 'mantenimiento', 'diario'],
         metadata: {
           'waterAmount': 'moderado',
@@ -624,7 +853,7 @@ class ActivityUtils {
           'avoid': 'hojas mojadas por la noche',
         },
       ),
-      Activity(
+      const Activity(
         id: 'harvest_plant',
         name: 'Cosechar Planta',
         description: 'Recoge los frutos de tus plantas maduras',
@@ -635,7 +864,7 @@ class ActivityUtils {
         maxDaily: 3,
         frequency: ActivityFrequency.semanal,
         difficulty: ActivityDifficulty.medio,
-        estimatedDuration: const Duration(minutes: 15),
+        estimatedDuration: Duration(minutes: 15),
         tags: ['cosecha', 'recompensa', 'fructífero'],
         metadata: {
           'requires': 'planta madura',
@@ -643,7 +872,7 @@ class ActivityUtils {
           'tools': ['tijeras', 'canasta'],
         },
       ),
-      Activity(
+      const Activity(
         id: 'daily_login',
         name: 'Login Diario',
         description: 'Inicia sesión en la aplicación',
@@ -654,14 +883,14 @@ class ActivityUtils {
         maxDaily: 1,
         frequency: ActivityFrequency.diaria,
         difficulty: ActivityDifficulty.facil,
-        estimatedDuration: const Duration(seconds: 30),
+        estimatedDuration: Duration(seconds: 30),
         tags: ['hábito', 'consistencia', 'diario'],
         metadata: {
           'streakBonus': 'puntos extra por racha',
           'reminder': 'activar notificaciones',
         },
       ),
-      Activity(
+      const Activity(
         id: 'share_garden',
         name: 'Compartir Huerto',
         description: 'Comparte el progreso de tu huerto con amigos',
@@ -672,14 +901,14 @@ class ActivityUtils {
         maxDaily: 3,
         frequency: ActivityFrequency.diaria,
         difficulty: ActivityDifficulty.facil,
-        estimatedDuration: const Duration(minutes: 2),
+        estimatedDuration: Duration(minutes: 2),
         tags: ['social', 'compartir', 'comunidad'],
         metadata: {
           'platforms': ['whatsapp', 'instagram', 'facebook'],
           'reward': 'puntos sociales extra',
         },
       ),
-      Activity(
+      const Activity(
         id: 'complete_tutorial',
         name: 'Completar Tutorial',
         description: 'Aprende sobre el cuidado de plantas',
@@ -690,7 +919,7 @@ class ActivityUtils {
         maxDaily: 1,
         frequency: ActivityFrequency.unica,
         difficulty: ActivityDifficulty.facil,
-        estimatedDuration: const Duration(minutes: 20),
+        estimatedDuration: Duration(minutes: 20),
         tags: ['aprendizaje', 'tutorial', 'habilidad'],
         tutorialUrl: 'https://ejemplo.com/tutorial/completo',
         metadata: {
@@ -699,7 +928,7 @@ class ActivityUtils {
           'certificate': 'disponible',
         },
       ),
-      Activity(
+      const Activity(
         id: 'prune_plant',
         name: 'Podar Planta',
         description: 'Poda las ramas y hojas secas de tus plantas',
@@ -710,7 +939,7 @@ class ActivityUtils {
         maxDaily: 2,
         frequency: ActivityFrequency.semanal,
         difficulty: ActivityDifficulty.medio,
-        estimatedDuration: const Duration(minutes: 15),
+        estimatedDuration: Duration(minutes: 15),
         tags: ['mantenimiento', 'salud', 'poda'],
         metadata: {
           'tools': ['tijeras de podar', 'guantes'],
@@ -718,7 +947,7 @@ class ActivityUtils {
           'frequency': 'cada 2 semanas',
         },
       ),
-      Activity(
+      const Activity(
         id: 'add_fertilizer',
         name: 'Añadir Fertilizante',
         description: 'Nutre tus plantas con fertilizante natural',
@@ -729,7 +958,7 @@ class ActivityUtils {
         maxDaily: 1,
         frequency: ActivityFrequency.mensual,
         difficulty: ActivityDifficulty.dificil,
-        estimatedDuration: const Duration(minutes: 25),
+        estimatedDuration: Duration(minutes: 25),
         tags: ['nutrición', 'crecimiento', 'avanzado'],
         metadata: {
           'fertilizerType': 'orgánico',
@@ -737,7 +966,7 @@ class ActivityUtils {
           'precautions': 'no exceder dosis',
         },
       ),
-      Activity(
+      const Activity(
         id: 'identify_pest',
         name: 'Identificar Plaga',
         description: 'Aprende a identificar y tratar plagas comunes',
@@ -748,7 +977,7 @@ class ActivityUtils {
         maxDaily: 1,
         frequency: ActivityFrequency.unica,
         difficulty: ActivityDifficulty.experto,
-        estimatedDuration: const Duration(minutes: 30),
+        estimatedDuration: Duration(minutes: 30),
         tags: ['diagnóstico', 'salud', 'experto'],
         tutorialUrl: 'https://ejemplo.com/tutorial/plagas',
         metadata: {
@@ -757,7 +986,7 @@ class ActivityUtils {
           'prevention': 'control regular',
         },
       ),
-      Activity(
+      const Activity(
         id: 'garden_planning',
         name: 'Planificar Huerto',
         description: 'Planifica la distribución de tu huerto',
@@ -768,7 +997,7 @@ class ActivityUtils {
         maxDaily: 1,
         frequency: ActivityFrequency.mensual,
         difficulty: ActivityDifficulty.medio,
-        estimatedDuration: const Duration(minutes: 40),
+        estimatedDuration: Duration(minutes: 40),
         tags: ['planificación', 'diseño', 'organización'],
         metadata: {
           'tools': ['papel', 'lápiz', 'regla'],
@@ -883,6 +1112,64 @@ class ActivityUtils {
     }
   }
 
+  // Crear perfil de ejemplo
+  static UserProfile getSampleUserProfile() {
+    return UserProfile(
+      id: 'user_001',
+      name: 'Juan Pérez',
+      email: 'juan@example.com',
+      gender: UserGender.masculino,
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      totalPoints: 875,
+      level: 9,
+      preferences: {
+        'notifications': true,
+        'darkMode': false,
+        'language': 'es',
+      },
+      completedActivityIds: [
+        'plant_seed',
+        'water_plant',
+        'daily_login',
+        'share_garden',
+      ],
+      favoriteActivityIds: [
+        'plant_seed',
+        'harvest_plant',
+      ],
+    );
+  }
+
+  // Crear perfil femenino de ejemplo
+  static UserProfile getSampleFemaleUserProfile() {
+    return UserProfile(
+      id: 'user_002',
+      name: 'María García',
+      email: 'maria@example.com',
+      gender: UserGender.femenino,
+      createdAt: DateTime.now().subtract(const Duration(days: 45)),
+      totalPoints: 1200,
+      level: 13,
+      preferences: {
+        'notifications': true,
+        'darkMode': true,
+        'language': 'es',
+      },
+      completedActivityIds: [
+        'plant_seed',
+        'water_plant',
+        'harvest_plant',
+        'daily_login',
+        'share_garden',
+        'complete_tutorial',
+      ],
+      favoriteActivityIds: [
+        'harvest_plant',
+        'prune_plant',
+      ],
+    );
+  }
+
   // Crear estadísticas de ejemplo
   static ActivityStats getSampleStats(String userId) {
     return ActivityStats(
@@ -940,10 +1227,14 @@ class ActivityUtils {
     // Priorizar categoría preferida
     if (preferredCategory != null) {
       recommended.sort((a, b) {
-        if (a.category == preferredCategory && b.category != preferredCategory)
+        if (a.category == preferredCategory &&
+            b.category != preferredCategory) {
           return -1;
-        if (a.category != preferredCategory && b.category == preferredCategory)
+        }
+        if (a.category != preferredCategory &&
+            b.category == preferredCategory) {
           return 1;
+        }
         return 0;
       });
     }

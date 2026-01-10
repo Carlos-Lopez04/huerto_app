@@ -349,7 +349,7 @@ class AchievementUtils {
   // Método para obtener todos los logros de ejemplo
   static List<Achievement> getSampleAchievements() {
     return [
-      Achievement(
+      const Achievement(
         id: 'first_seed',
         title: 'Primera Semilla',
         description: 'Planta tu primera semilla',
@@ -362,7 +362,7 @@ class AchievementUtils {
         level: AchievementLevel.bronze,
         requirements: ['activity:plant_seed'],
       ),
-      Achievement(
+      const Achievement(
         id: 'water_master_beginner',
         title: 'Aprendiz del Riego',
         description: 'Riega plantas 10 veces',
@@ -375,7 +375,7 @@ class AchievementUtils {
         level: AchievementLevel.bronze,
         requirements: ['activity_count:water_plant|10'],
       ),
-      Achievement(
+      const Achievement(
         id: 'daily_streak_3',
         title: 'Racha de 3 Días',
         description: '3 días consecutivos usando la app',
@@ -388,7 +388,7 @@ class AchievementUtils {
         level: AchievementLevel.bronze,
         requirements: ['consecutive_days:3'],
       ),
-      Achievement(
+      const Achievement(
         id: 'level_2',
         title: 'Crecimiento Inicial',
         description: 'Alcanza el nivel 2',
@@ -401,7 +401,7 @@ class AchievementUtils {
         level: AchievementLevel.bronze,
         requirements: ['level:2'],
       ),
-      Achievement(
+      const Achievement(
         id: 'social_beginner',
         title: 'Primer Compartir',
         description: 'Comparte tu huerto por primera vez',
@@ -414,7 +414,7 @@ class AchievementUtils {
         level: AchievementLevel.bronze,
         requirements: ['activity:share_garden'],
       ),
-      Achievement(
+      const Achievement(
         id: 'first_harvest',
         title: 'Primera Cosecha',
         description: 'Cosecha tu primera planta',
@@ -428,7 +428,7 @@ class AchievementUtils {
         requirements: ['activity:harvest_plant'],
         unlockedDescription: '¡Felicidades por tu primera cosecha!',
       ),
-      Achievement(
+      const Achievement(
         id: 'plant_collector',
         title: 'Coleccionista Novato',
         description: 'Cultiva 3 tipos diferentes de plantas',

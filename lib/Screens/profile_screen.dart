@@ -50,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Navegación a pantalla de logros
+  // Navegación a pantalla de logros - ACTUALIZADO
   Future<void> _navigateToAchievements() async {
     final updatedUser = await Navigator.push<UserModel>(
       context,
@@ -72,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Navegación a pantalla de personalización del avatar - NUEVO MÉTODO
+  // Navegación a pantalla de personalización del avatar
   Future<void> _navigateToAvatarCustomizer() async {
     final updatedUser = await Navigator.push<UserModel>(
       context,
@@ -146,14 +146,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  // Avatar del usuario en lugar de foto
+                  // Avatar del usuario en lugar de foto - ACTUALIZADO
                   GestureDetector(
                     onTap: _navigateToAvatarCustomizer,
                     child: Stack(
                       alignment: Alignment.bottomRight,
                       children: [
+                        // AvatarWidget ahora acepta UserModel directamente
                         AvatarWidget(
-                          avatar: _currentUser.avatar,
+                          user: _currentUser,
                           size: 120,
                           borderColor: emeraldLeaf,
                           showBorder: true,
@@ -240,24 +241,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Título y Rango
+                  // Título y Rango - ACTUALIZADO
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Título (seleccionable)
+                      // Título (seleccionable) - AHORA USA user.title
                       _buildInfoCard(
                         icon: Icons.workspace_premium,
                         title: 'Título',
-                        value: _currentUser.title,
+                        value: _currentUser.title, // Usa el getter title
                         onTap: _navigateToAchievements,
                         isSelectable: true,
                       ),
 
-                      // Rango
+                      // Rango - ACTUALIZADO
                       _buildInfoCard(
                         icon: Icons.leaderboard,
                         title: 'Rango',
-                        value: _currentUser.rank,
+                        value: _currentUser.displayRank, // Usa displayRank
                         onTap: _showRankInfo,
                         isSelectable: false,
                       ),
@@ -269,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // Estadísticas rápidas
+            // Estadísticas rápidas - ACTUALIZADO
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -290,22 +291,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      // Plantas (simulado)
                       _buildStatItem(
                         value: '12',
                         label: 'Plantas',
                         icon: Icons.eco,
                         color: freshMint,
                       ),
+                      // Logros - ACTUALIZADO
                       _buildStatItem(
                         value:
-                            '${_currentUser.unlockedAchievementsCount}/${_currentUser.achievements.length}',
+                            '${_currentUser.unlockedAchievementsCount}/20', // Usa el getter
                         label: 'Logros',
                         icon: Icons.emoji_events,
                         color: goldenSun,
                       ),
+                      // Días activo - ACTUALIZADO
                       _buildStatItem(
                         value: _currentUser.consecutiveDays.toString(),
-                        label: 'Días activo',
+                        label: 'Días seguidos',
                         icon: Icons.calendar_today,
                         color: clearBlue,
                       ),
@@ -572,8 +576,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               Navigator.pop(context);
               _updateUser(_currentUser.copyWith(
-                imageUrl: 'https://example.com/nueva-foto.jpg',
-              ));
+                  // Nota: UserModel no tiene imageUrl, así que comentamos esto
+                  // imageUrl: 'https://example.com/nueva-foto.jpg',
+                  ));
             },
             child: const Text('Galería', style: AppFont.bodyMedium),
           ),
@@ -672,7 +677,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tu rango actual: ${_currentUser.rank}',
+            Text('Tu rango actual: ${_currentUser.displayRank}',
                 style: AppFont.bodyMedium),
             const SizedBox(height: 16),
             const Text('• Semilla - Nivel inicial', style: AppFont.bodySmall),

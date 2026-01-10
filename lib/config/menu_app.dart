@@ -7,31 +7,31 @@ import 'package:huerto_app/screens/profile_screen.dart';
 import 'package:huerto_app/screens/achievements_screen.dart';
 import 'package:huerto_app/screens/activity_tracking_screen.dart';
 import 'package:huerto_app/models/user_model.dart';
-import 'package:huerto_app/config/widgets/avatar_widget.dart';
+import 'package:huerto_app/config/widgets/avatar_widget.dart'; // <-- Asegúrate que sea widgets/avatar_widget.dart
+import 'package:huerto_app/services/user_service.dart'; // <-- Importar UserService para stats
 
 class MenuApp {
-  // Datos del usuario actual
-  static UserModel _currentUser = UserModel.defaultUser(
-    name: 'Ana García',
-    email: 'ana.garcia@huerto.com',
-  );
-
-  // Método para actualizar el usuario desde otras pantallas
-  static void updateUser(UserModel newUser) {
-    _currentUser = newUser;
-  }
+  // Usar UserService en lugar de mantener el usuario directamente
+  static final UserService _userService = UserService();
 
   // Método para obtener el usuario actual
-  static UserModel get currentUser => _currentUser;
+  static UserModel get currentUser => _userService.currentUser;
+
+  // Método para actualizar el usuario
+  static void updateUser(UserModel newUser) {
+    _userService.updateUser(newUser);
+  }
 
   // Método para obtener el Drawer completo
   static Drawer buildDrawer(BuildContext context) {
+    final user = currentUser;
+
     return Drawer(
       backgroundColor: verdeGelido,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _buildDrawerHeader(context),
+          _buildDrawerHeader(context, user),
           _buildDrawerItem(
             icon: Icons.home,
             title: 'Inicio',
@@ -94,7 +94,7 @@ class MenuApp {
             title: 'Mi Progreso',
             onTap: () {
               Navigator.pop(context);
-              _showProgressDialog(context);
+              _showProgressDialog(context, user);
             },
           ),
           _buildDrawerItem(
@@ -111,7 +111,7 @@ class MenuApp {
             title: 'Cerrar Sesión',
             onTap: () {
               Navigator.pop(context);
-              _showLogoutDialog(context);
+              _showLogoutDialog(context, user);
             },
           ),
         ],
@@ -120,7 +120,7 @@ class MenuApp {
   }
 
   // Encabezado del Drawer
-  static Widget _buildDrawerHeader(BuildContext context) {
+  static Widget _buildDrawerHeader(BuildContext context, UserModel user) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
@@ -142,7 +142,8 @@ class MenuApp {
                     alignment: Alignment.bottomRight,
                     children: [
                       AvatarWidget(
-                        avatar: _currentUser.avatar,
+                        // <-- CORREGIDO: usar user en lugar de avatar
+                        user: user, // <-- Pasar user directamente
                         size: 70,
                         borderColor: cloudWhite,
                         showBorder: true,
@@ -176,7 +177,7 @@ class MenuApp {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _currentUser.name,
+                          user.name,
                           style: AppFont.titleMedium.copyWith(
                             color: cloudWhite,
                             fontWeight: FontWeight.bold,
@@ -186,7 +187,7 @@ class MenuApp {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _currentUser.email,
+                          user.email,
                           style: AppFont.bodySmall.copyWith(
                             color: cloudWhite.withOpacity(0.9),
                           ),
@@ -196,7 +197,7 @@ class MenuApp {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            // Título actual
+                            // Título/Rango
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
@@ -213,7 +214,7 @@ class MenuApp {
                                       size: 12, color: cloudWhite),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _currentUser.title,
+                                    user.displayRank, // <-- Usar displayRank
                                     style: AppFont.bodySmall.copyWith(
                                       color: cloudWhite,
                                       fontSize: 10,
@@ -226,7 +227,7 @@ class MenuApp {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Rango actual
+                            // Género
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
@@ -239,11 +240,15 @@ class MenuApp {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.leaderboard,
-                                      size: 12, color: cloudWhite),
+                                  Icon(
+                                      user.gender == UserGender.femenino
+                                          ? Icons.person_2
+                                          : Icons.person,
+                                      size: 12,
+                                      color: cloudWhite),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _currentUser.rank,
+                                    user.displayGender, // <-- Usar displayGender
                                     style: AppFont.bodySmall.copyWith(
                                       color: cloudWhite,
                                       fontSize: 10,
@@ -257,7 +262,7 @@ class MenuApp {
                             ),
                           ],
                         ),
-                        // NUEVO: Puntos y nivel
+                        // Puntos y nivel
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -277,7 +282,7 @@ class MenuApp {
                                       size: 12, color: Colors.white),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${_currentUser.totalPoints} pts',
+                                    '${user.totalPoints} pts',
                                     style: AppFont.bodySmall.copyWith(
                                       color: Colors.white,
                                       fontSize: 10,
@@ -304,7 +309,7 @@ class MenuApp {
                                       size: 12, color: Colors.white),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Nivel ${_currentUser.calculatedLevel}',
+                                    'Nivel ${user.level}',
                                     style: AppFont.bodySmall.copyWith(
                                       color: Colors.white,
                                       fontSize: 10,
@@ -399,7 +404,7 @@ class MenuApp {
       context,
       MaterialPageRoute(
         builder: (context) => ProfileScreen(
-          user: _currentUser,
+          user: currentUser,
           onUserUpdated: (updatedUser) {
             updateUser(updatedUser);
             // Notificar a la pantalla actual que se actualizó el usuario
@@ -425,7 +430,7 @@ class MenuApp {
       context,
       MaterialPageRoute(
         builder: (context) => AchievementsScreen(
-          user: _currentUser,
+          user: currentUser,
           onUserUpdated: (UserModel user) {
             updateUser(user);
             if (context.mounted) {
@@ -456,7 +461,7 @@ class MenuApp {
       context,
       MaterialPageRoute(
         builder: (context) => ActivityTrackingScreen(
-          user: _currentUser,
+          user: currentUser,
           onUserUpdated: (updatedUser) {
             updateUser(updatedUser);
             if (context.mounted) {
@@ -534,7 +539,7 @@ class MenuApp {
   }
 
   // Diálogo para cerrar sesión
-  static void _showLogoutDialog(BuildContext context) {
+  static void _showLogoutDialog(BuildContext context, UserModel user) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -551,8 +556,9 @@ class MenuApp {
             mainAxisSize: MainAxisSize.min,
             children: [
               AvatarWidget(
-                avatar: _currentUser.avatar,
+                user: user, // <-- CORREGIDO
                 size: 60,
+                showBorder: true,
                 borderColor: tomatoRed.withOpacity(0.3),
               ),
               const SizedBox(height: 16),
@@ -582,13 +588,10 @@ class MenuApp {
                 ),
                 child: Column(
                   children: [
-                    _buildStatRow(
-                        'Puntos totales', '${_currentUser.totalPoints}'),
-                    _buildStatRow(
-                        'Logros', '${_currentUser.achievements.length}'),
-                    _buildStatRow(
-                        'Días seguidos', '${_currentUser.consecutiveDays}'),
-                    _buildStatRow('Nivel', '${_currentUser.calculatedLevel}'),
+                    _buildStatRow('Puntos totales', '${user.totalPoints}'),
+                    _buildStatRow('Nivel', '${user.level}'),
+                    _buildStatRow('Rango', user.displayRank),
+                    _buildStatRow('Género', user.displayGender),
                   ],
                 ),
               ),
@@ -648,6 +651,8 @@ class MenuApp {
 
   // Método para realizar el logout
   static void _performLogout(BuildContext context) {
+    final user = currentUser;
+
     // Mostrar snackbar de confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -657,7 +662,7 @@ class MenuApp {
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Sesión cerrada - ¡Hasta pronto, ${_currentUser.name}!',
+              'Sesión cerrada - ¡Hasta pronto, ${user.name}!',
               style: AppFont.bodyMedium.copyWith(color: Colors.white),
             ),
           ],
@@ -683,10 +688,7 @@ class MenuApp {
   }
 
   // NUEVO: Diálogo para mostrar progreso
-  static void _showProgressDialog(BuildContext context) {
-    final user = _currentUser;
-    final stats = user.stats;
-
+  static void _showProgressDialog(BuildContext context, UserModel user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -721,7 +723,7 @@ class MenuApp {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Nivel ${user.calculatedLevel}',
+                          'Nivel ${user.level}',
                           style: AppFont.bodyMedium.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -754,7 +756,7 @@ class MenuApp {
                               AppFont.bodySmall.copyWith(color: Colors.white70),
                         ),
                         Text(
-                          '${user.pointsToNextLevel} pts para nivel ${user.calculatedLevel + 1}',
+                          '${user.pointsToNextLevel} pts para nivel ${user.level + 1}',
                           style:
                               AppFont.bodySmall.copyWith(color: Colors.white70),
                         ),
@@ -785,55 +787,31 @@ class MenuApp {
                 childAspectRatio: 2.5,
                 children: [
                   _buildStatCard(
-                    'Logros Desbl.',
-                    '${user.achievements.length}',
-                    Icons.emoji_events,
+                    'Actividades Complet.',
+                    '${user.completedActivityIds.length}',
+                    Icons.checklist,
                     freshMint,
                   ),
                   _buildStatCard(
-                    'Días Seguidos',
-                    '${user.consecutiveDays}',
-                    Icons.calendar_today,
+                    'Favoritos',
+                    '${user.favoriteActivityIds.length}',
+                    Icons.favorite,
                     sunflower,
                   ),
                   _buildStatCard(
-                    'Actividades Tot.',
-                    '${stats['totalActivities']}',
-                    Icons.checklist,
-                    clearBlue,
+                    'Puntos Total',
+                    '${user.totalPoints}',
+                    Icons.star,
+                    goldenSun,
                   ),
                   _buildStatCard(
-                    'Login Hoy',
-                    user.hasLoggedInToday ? 'Sí' : 'No',
-                    Icons.login,
-                    user.hasLoggedInToday ? emeraldLeaf : Colors.grey,
+                    'Rango',
+                    user.displayRank,
+                    Icons.leaderboard,
+                    clearBlue,
                   ),
                 ],
               ),
-
-              const SizedBox(height: 16),
-
-              // Actividades más comunes
-              if (user.activityCounts.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Actividades Frecuentes',
-                      style: AppFont.titleSmall.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: forestDepth,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...user.activityCounts.entries
-                        .where((entry) => entry.value > 0)
-                        .take(3)
-                        .map((entry) =>
-                            _buildActivityItem(entry.key, entry.value))
-                        .toList(),
-                  ],
-                ),
 
               const SizedBox(height: 16),
 
@@ -913,69 +891,6 @@ class MenuApp {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget _buildActivityItem(String activityId, int count) {
-    final activityNames = {
-      'plant_seed': 'Plantar Semilla',
-      'water_plant': 'Regar Plantas',
-      'daily_login': 'Login Diario',
-      'share_garden': 'Compartir Huerto',
-      'harvest_plant': 'Cosechar',
-    };
-
-    final activityIcons = {
-      'plant_seed': Icons.eco,
-      'water_plant': Icons.water_drop,
-      'daily_login': Icons.login,
-      'share_garden': Icons.share,
-      'harvest_plant': Icons.grass,
-    };
-
-    final activityColors = {
-      'plant_seed': freshMint,
-      'water_plant': clearBlue,
-      'daily_login': sunflower,
-      'share_garden': berryPink,
-      'harvest_plant': goldenSun,
-    };
-
-    final name = activityNames[activityId] ?? activityId;
-    final icon = activityIcons[activityId] ?? Icons.help;
-    final color = activityColors[activityId] ?? forestDepth;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(name, style: AppFont.bodySmall),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '$count veces',
-              style: AppFont.bodySmall.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
             ),
           ),
         ],

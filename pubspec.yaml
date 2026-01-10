@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.0
   http: ^1.1.0
   image_picker: ^1.0.4
   permission_handler: ^11.0.1
@@ -26,4 +28,6 @@ flutter:
   assets:
     - lib/images/app_logo.png
     - lib/images/icons/trophy_35dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png
+    - lib\images\avatar_masculino.png
+    - lib\images\avatar_femenino.png
     # - lib/data/achievements_data.json
