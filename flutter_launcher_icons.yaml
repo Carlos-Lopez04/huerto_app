@@ -1,0 +1,6 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "lib/images/logo_app.png"  # Tu imagen de logo
+  adaptive_icon_background: "#FFFFFF"  # Color de fondo para Android
+  adaptive_icon_foreground: "lib/images/logo_app.png"

@@ -21,13 +21,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
 
   assets:
     - lib/images/app_logo.png
+    - lib/images/logo_app.png
     - lib/images/icons/trophy_35dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png
-    - lib\images\avatar_masculino.png
-    - lib\images\avatar_femenino.png
+    - lib/images/avatar_masculino.png
+    - lib/images/avatar_femenino.png
     # - lib/data/achievements_data.json
