@@ -120,18 +120,22 @@ class AvatarModel {
   */
   String get hairImagePath {
     // Nombres de archivos basados en color aproximado
-    if (hairColor == Colors.black)
+    if (hairColor == Colors.black) {
       return 'assets/avatars/hair/black_hair.png'; // Cabello negro
-    if (hairColor == Colors.brown)
+    }
+    if (hairColor == Colors.brown) {
       return 'assets/avatars/hair/brown_hair.png'; // Cabello café
+    }
     if (hairColor == Colors.yellow[50]) {
       // Amarillo claro (rubio)
       return 'assets/avatars/hair/blonde_hair.png'; // Cabello rubio
     }
-    if (hairColor == Colors.red)
+    if (hairColor == Colors.red) {
       return 'assets/avatars/hair/red_hair.png'; // Cabello rojo
-    if (hairColor == Colors.grey)
+    }
+    if (hairColor == Colors.grey) {
       return 'assets/avatars/hair/grey_hair.png'; // Cabello gris
+    }
     return 'assets/avatars/hair/default_hair.png'; // Cabello por defecto
   }
 
@@ -139,14 +143,18 @@ class AvatarModel {
     Obtiene la ruta de la imagen de ojos según el color
   */
   String get eyeImagePath {
-    if (eyeColor == Colors.brown)
+    if (eyeColor == Colors.brown) {
       return 'assets/avatars/eyes/brown_eyes.png'; // Ojos cafés
-    if (eyeColor == Colors.blue)
+    }
+    if (eyeColor == Colors.blue) {
       return 'assets/avatars/eyes/blue_eyes.png'; // Ojos azules
-    if (eyeColor == Colors.green)
+    }
+    if (eyeColor == Colors.green) {
       return 'assets/avatars/eyes/green_eyes.png'; // Ojos verdes
-    if (eyeColor == Colors.grey)
+    }
+    if (eyeColor == Colors.grey) {
       return 'assets/avatars/eyes/grey_eyes.png'; // Ojos grises
+    }
     return 'assets/avatars/eyes/default_eyes.png'; // Ojos por defecto
   }
 

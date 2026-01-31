@@ -775,12 +775,15 @@ class UserModel {
 
   // Método auxiliar para obtener nombre del color
   String _getColorName(Color color) {
-    if (color == defaultSkinColor)
+    if (color == defaultSkinColor) {
       return 'Piel Claro'; // Nombre para color por defecto
-    if (color == defaultHairColor)
+    }
+    if (color == defaultHairColor) {
       return 'Castaño Oscuro'; // Nombre para color por defecto
-    if (color == defaultEyeColor)
+    }
+    if (color == defaultEyeColor) {
       return 'Verde'; // Nombre para color por defecto
+    }
     if (color == Colors.black) return 'Negro'; // Negro
     if (color == Colors.brown) return 'Marrón'; // Marrón
     if (color == Colors.blue) return 'Azul'; // Azul
@@ -789,11 +792,13 @@ class UserModel {
     if (color == const Color(0xFFFFDBAC)) return 'Claro'; // Color claro
     if (color == const Color(0xFFD8A871)) return 'Medio'; // Color medio
     if (color == const Color(0xFFA1663C)) return 'Oscuro'; // Color oscuro
-    if (color == const Color(0xFF8D5524))
+    if (color == const Color(0xFF8D5524)) {
       return 'Muy Oscuro'; // Color muy oscuro
+    }
     if (color == const Color(0xFF8B4513)) return 'Castaño'; // Castaño
-    if (color == const Color(0xFFD2691E))
+    if (color == const Color(0xFFD2691E)) {
       return 'Castaño Claro'; // Castaño claro
+    }
     if (color == const Color(0xFFCD853F)) return 'Rubio Oscuro'; // Rubio oscuro
     if (color == const Color(0xFFDAA520)) return 'Rubio'; // Rubio
     if (color == const Color(0xFFB8860B)) return 'Cobrizo'; // Cobrizo

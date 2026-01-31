@@ -359,10 +359,12 @@ class Activity {
   */
   bool get isAvailable {
     final now = DateTime.now(); // Obtiene fecha actual
-    if (availableFrom != null && now.isBefore(availableFrom!))
+    if (availableFrom != null && now.isBefore(availableFrom!)) {
       return false; // Si es antes de la fecha de inicio
-    if (availableUntil != null && now.isAfter(availableUntil!))
+    }
+    if (availableUntil != null && now.isAfter(availableUntil!)) {
       return false; // Si es después de la fecha de fin
+    }
     return isActive; // Retorna si está activa
   }
 
@@ -958,15 +960,18 @@ class ActivityUtils {
     if (color == sunflower) return 'sunflower'; // Compara con color del tema
     if (color == goldenSun) return 'goldenSun'; // Compara con color del tema
     if (color == berryPink) return 'berryPink'; // Compara con color del tema
-    if (color == emeraldLeaf)
+    if (color == emeraldLeaf) {
       return 'emeraldLeaf'; // Compara con color del tema
-    if (color == forestDepth)
+    }
+    if (color == forestDepth) {
       return 'forestDepth'; // Compara con color del tema
+    }
     if (color == tomatoRed) return 'tomatoRed'; // Compara con color del tema
     if (color == oceanMist) return 'oceanMist'; // Compara con color del tema
     if (color == lightSage) return 'lightSage'; // Compara con color del tema
-    if (color == springGrass)
+    if (color == springGrass) {
       return 'springGrass'; // Compara con color del tema
+    }
     return 'freshMint'; // Por defecto
   }
 
@@ -1528,10 +1533,12 @@ class Mission {
   */
   bool get isAvailable {
     final now = DateTime.now(); // Fecha actual
-    if (startDate != null && now.isBefore(startDate!))
+    if (startDate != null && now.isBefore(startDate!)) {
       return false; // Si es antes del inicio
-    if (endDate != null && now.isAfter(endDate!))
+    }
+    if (endDate != null && now.isAfter(endDate!)) {
       return false; // Si es después del fin
+    }
     return isActive; // Retorna si está activa
   }
 
