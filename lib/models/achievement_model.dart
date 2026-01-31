@@ -582,20 +582,13 @@ class AchievementUtils {
     Obtiene el nombre del color a partir del objeto Color
   */
   static String _getColorName(Color color) {
-    if (color.value == freshMint.value)
-      return 'freshMint'; // Compara valores hex
-    if (color.value == clearBlue.value)
-      return 'clearBlue'; // Compara valores hex
-    if (color.value == sunflower.value)
-      return 'sunflower'; // Compara valores hex
-    if (color.value == goldenSun.value)
-      return 'goldenSun'; // Compara valores hex
-    if (color.value == berryPink.value)
-      return 'berryPink'; // Compara valores hex
-    if (color.value == emeraldLeaf.value)
-      return 'emeraldLeaf'; // Compara valores hex
-    if (color.value == forestDepth.value)
-      return 'forestDepth'; // Compara valores hex
+    if (color == freshMint) return 'freshMint'; // Compara valores hex
+    if (color == clearBlue) return 'clearBlue'; // Compara valores hex
+    if (color == sunflower) return 'sunflower'; // Compara valores hex
+    if (color == goldenSun) return 'goldenSun'; // Compara valores hex
+    if (color == berryPink) return 'berryPink'; // Compara valores hex
+    if (color == emeraldLeaf) return 'emeraldLeaf'; // Compara valores hex
+    if (color == forestDepth) return 'forestDepth'; // Compara valores hex
     return 'freshMint'; // Por defecto
   }
 }
