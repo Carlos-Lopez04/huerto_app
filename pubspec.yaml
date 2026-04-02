@@ -1,0 +1,47 @@
+name: huerto_app
+description: A new Flutter project.
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Cámara y multimedia
+  camera: ^0.10.5
+  image_picker: ^1.0.7 
+  permission_handler: ^11.3.0
+
+  # Escáner QR
+  mobile_scanner: ^4.0.1
+  
+  # Almacenamiento y archivos
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
+  path: ^1.9.0
+  
+  # Red y utilidades
+  http: ^1.1.0
+  image: ^4.1.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - lib/images/app_logo.png
+    - lib/images/logo_app.png
+    - lib/images/icons/trophy_35dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png
+    - lib/images/avatar_masculino.png
+    - lib/images/avatar_femenino.png
+    # - lib/data/achievements_data.json
