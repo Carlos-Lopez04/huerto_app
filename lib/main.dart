@@ -1,3 +1,4 @@
+
 // Importa el paquete de Flutter, necesario para desarrollar aplicaciones Flutter
 import 'package:flutter/material.dart';
 // Importa el tema personalizado de la aplicación

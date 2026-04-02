@@ -25,6 +25,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   bool _isTorchOn = false;
   String? _errorMessage;
   bool _isProcessing = false;
+  bool _isTestMode = false; // Modo prueba para emulador
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _controller != null) {
+    if (state == AppLifecycleState.resumed && _controller != null && !_isTestMode) {
       _controller?.start();
     }
     if (state == AppLifecycleState.paused && _controller != null) {
@@ -57,19 +58,22 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     });
 
     try {
-      // Solicitar permisos
+      // Intentar solicitar permisos
       final hasPermission = await _scannerService.requestCameraPermission();
       if (!hasPermission) {
+        // Si no hay permisos, activar modo prueba
         setState(() {
-          _errorMessage =
-              'No se tienen permisos para usar la cámara.\nPor favor, otorga los permisos en ajustes.';
+          _isTestMode = true;
           _isInitializing = false;
         });
         return;
       }
 
-      // Inicializar escáner
+      // Intentar inicializar escáner
       _controller = _scannerService.initializeScanner();
+      
+      // Esperar un momento para ver si se inicializa correctamente
+      await Future.delayed(const Duration(seconds: 1));
       
       if (mounted) {
         setState(() {
@@ -77,9 +81,12 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         });
       }
     } catch (e) {
+      // Si hay error (como en emulador sin cámara), activar modo prueba
+      print('Error al inicializar escáner: $e');
       setState(() {
-        _errorMessage = 'Error al iniciar el escáner: ${e.toString()}';
+        _isTestMode = true;
         _isInitializing = false;
+        _errorMessage = null; // Limpiar error, usamos modo prueba
       });
     }
   }
@@ -108,6 +115,107 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         if (mounted) {
           Navigator.pop(context, code);
         }
+      }
+    }
+  }
+
+  // Simular escaneo para pruebas en emulador
+  void _simulateScan() {
+    final TextEditingController textController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: blancoHueso,
+        title: const Row(
+          children: [
+            Icon(Icons.qr_code_scanner, color: forestDepth),
+            SizedBox(width: 8),
+            Text('Simular Escaneo', style: AppFont.titleMedium),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Ingresa manualmente el código QR que deseas probar:',
+              style: AppFont.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: textController,
+              decoration: InputDecoration(
+                labelText: 'Código QR',
+                hintText: 'Ej: PLANT-TOMATO-001',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.qr_code),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: verdeGelido,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Códigos de prueba sugeridos:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text('• PLANT-TOMATO-001'),
+                  Text('• https://www.fca.uabc.mx'),
+                  Text('• REWARD-100-POINTS'),
+                  Text('• PLANT-BASIL-002'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              final code = textController.text.trim();
+              if (code.isNotEmpty) {
+                Navigator.pop(context);
+                _processSimulatedCode(code);
+              }
+            },
+            icon: const Icon(Icons.qr_code_scanner, size: 18),
+            label: const Text('Escanear'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: forestDepth,
+              foregroundColor: blancoHueso,
+            ),
+          ),
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  void _processSimulatedCode(String code) async {
+    _isProcessing = true;
+    final shouldContinue = await _showScanResultDialog(code);
+    
+    if (shouldContinue) {
+      _isProcessing = false;
+    } else {
+      widget.onScanCompleted(code);
+      if (mounted) {
+        Navigator.pop(context, code);
       }
     }
   }
@@ -198,29 +306,105 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escanear QR'),
+        title: Text(_isTestMode ? 'Simulador de Escáner' : 'Escanear QR'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         actions: [
-          // Botón para linterna
-          IconButton(
-            onPressed: _toggleTorch,
-            icon: Icon(
-              _isTorchOn ? Icons.flash_on : Icons.flash_off,
-              color: Colors.white,
+          if (!_isTestMode) ...[
+            // Botón para linterna (solo en modo real)
+            IconButton(
+              onPressed: _toggleTorch,
+              icon: Icon(
+                _isTorchOn ? Icons.flash_on : Icons.flash_off,
+                color: Colors.white,
+              ),
+              tooltip: _isTorchOn ? 'Apagar linterna' : 'Encender linterna',
             ),
-            tooltip: _isTorchOn ? 'Apagar linterna' : 'Encender linterna',
-          ),
-          // Botón para cambiar cámara
+            // Botón para cambiar cámara
+            IconButton(
+              onPressed: _switchCamera,
+              icon: const Icon(Icons.switch_camera),
+              tooltip: 'Cambiar cámara',
+            ),
+          ],
+          // Botón de ayuda
           IconButton(
-            onPressed: _switchCamera,
-            icon: const Icon(Icons.switch_camera),
-            tooltip: 'Cambiar cámara',
+            onPressed: _showHelpDialog,
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Ayuda',
           ),
         ],
       ),
       body: _buildBody(),
+      floatingActionButton: _isTestMode
+          ? FloatingActionButton.extended(
+              onPressed: _simulateScan,
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Simular Escaneo'),
+              backgroundColor: forestDepth,
+            )
+          : null,
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: blancoHueso,
+        title: const Row(
+          children: [
+            Icon(Icons.help, color: forestDepth),
+            SizedBox(width: 8),
+            Text('Ayuda del Escáner', style: AppFont.titleMedium),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '📱 Escáner QR',
+              style: AppFont.bodyMedium,
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• Apunta la cámara al código QR\n'
+              '• Mantén el código dentro del marco\n'
+              '• El escáner detectará automáticamente',
+              style: AppFont.bodySmall,
+            ),
+            Divider(height: 24),
+            Text(
+              '🧪 Modo de Prueba (Emulador)',
+              style: AppFont.bodyMedium,
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Si estás en un emulador sin cámara:\n'
+              '1. Se activará automáticamente el modo simulación\n'
+              '2. Usa el botón "Simular Escaneo"\n'
+              '3. Ingresa manualmente el código que deseas probar\n\n'
+              'Códigos de prueba sugeridos:\n'
+              '• PLANT-TOMATO-001\n'
+              '• https://www.fca.uabc.mx\n'
+              '• REWARD-100-POINTS\n'
+              '• PLANT-BASIL-002',
+              style: AppFont.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Entendido', style: AppFont.button),
+          ),
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
     );
   }
 
@@ -238,7 +422,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       );
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null && !_isTestMode) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -260,6 +444,70 @@ class _QRScannerScreenState extends State<QRScannerScreen>
               ElevatedButton(
                 onPressed: _initializeScanner,
                 child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_isTestMode) {
+      // Modo de simulación para pruebas en emulador
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.qr_code_scanner,
+                size: 100,
+                color: forestDepth.withOpacity(0.5),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Modo de Prueba',
+                style: AppFont.titleLarge.copyWith(
+                  color: forestDepth,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'El escáner está en modo simulación.\n'
+                'Usa el botón flotante para probar códigos QR.',
+                textAlign: TextAlign.center,
+                style: AppFont.bodyMedium,
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: verdeGelido,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '📋 Códigos de prueba:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '• PLANT-TOMATO-001\n'
+                      '• https://www.fca.uabc.mx\n'
+                      '• REWARD-100-POINTS\n'
+                      '• PLANT-BASIL-002\n'
+                      '• PLANT-ALOE-003\n'
+                      '• ACT-WATER-001',
+                      style: AppFont.bodySmall.copyWith(
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

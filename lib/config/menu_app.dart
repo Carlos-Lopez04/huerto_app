@@ -12,6 +12,7 @@ import 'package:huerto_app/services/user_service.dart'; // Importar servicio de 
 // ========== IMPORTAR PANTALLAS DE CÁMARA Y ESCÁNER ==========
 import 'package:huerto_app/screens/camera/camera_screen.dart'; // Importar pantalla de cámara
 import 'package:huerto_app/screens/camera/qr_scanner_screen.dart'; // Importar pantalla de escáner QR
+import 'package:huerto_app/screens/camera/test_qr_with_image.dart'; // IMPORTAR PANTALLA DE PRUEBA QR
 import 'dart:io'; // Importar para manejar archivos
 // ===========================================================
 
@@ -110,6 +111,23 @@ class MenuApp {
               // Acción al tocar
               Navigator.pop(context); // Cierra el drawer
               _navigateToCamera(context); // Navega a la cámara
+            },
+          ),
+          
+          // ========== NUEVO: BOTÓN DE PRUEBA QR CON IMAGEN ==========
+          // Opción 3: Probar QR con Imagen (para desarrollo/pruebas)
+          _buildDrawerItem(
+            icon: Icons.qr_code, // Icono de código QR
+            title: 'Probar QR (Imagen)', // Título del item
+            onTap: () {
+              // Acción al tocar
+              Navigator.pop(context); // Cierra el drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TestQRWithImage(),
+                ),
+              );
             },
           ),
           // =========================================================
