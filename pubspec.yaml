@@ -45,3 +45,4 @@ flutter:
     - lib/images/avatar_masculino.png
     - lib/images/avatar_femenino.png
     # - lib/data/achievements_data.json
+    - lib/images/fca_link.png
