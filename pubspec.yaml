@@ -29,6 +29,8 @@ dependencies:
   http: ^1.1.0
   image: ^4.1.7
 
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -46,3 +48,4 @@ flutter:
     - lib/images/avatar_femenino.png
     # - lib/data/achievements_data.json
     - lib/images/fca_link.png
+    - .env

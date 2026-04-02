@@ -9,12 +9,12 @@ import 'package:huerto_app/screens/activity_tracking_screen.dart'; // Importar p
 import 'package:huerto_app/models/user_model.dart'; // Importar modelo de usuario
 import 'package:huerto_app/config/widgets/avatar_widget.dart'; // Importar widget de avatar
 import 'package:huerto_app/services/user_service.dart'; // Importar servicio de usuario para estadísticas
-// ========== IMPORTAR PANTALLAS DE CÁMARA Y ESCÁNER ==========
 import 'package:huerto_app/screens/camera/camera_screen.dart'; // Importar pantalla de cámara
 import 'package:huerto_app/screens/camera/qr_scanner_screen.dart'; // Importar pantalla de escáner QR
 import 'package:huerto_app/screens/camera/test_qr_with_image.dart'; // IMPORTAR PANTALLA DE PRUEBA QR
 import 'dart:io'; // Importar para manejar archivos
-// ===========================================================
+import 'package:huerto_app/screens/plants_info_screen.dart'; // Importar pantalla de información de plantas
+
 
 /*
     Clase principal para manejar el menú de navegación de la aplicación
@@ -116,21 +116,39 @@ class MenuApp {
           
           // ========== NUEVO: BOTÓN DE PRUEBA QR CON IMAGEN ==========
           // Opción 3: Probar QR con Imagen (para desarrollo/pruebas)
+          // _buildDrawerItem(
+          //   icon: Icons.qr_code, // Icono de código QR
+          //   title: 'Probar QR (Imagen)', // Título del item
+          //   onTap: () {
+              // Acción al tocar
+          //     Navigator.pop(context); // Cierra el drawer
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const TestQRWithImage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // =========================================================
+          
+          // ========== NUEVO: BOTÓN DE INFORMACIÓN DE PLANTAS ==========
+          // Opción 4: Información de Plantas (con API)
           _buildDrawerItem(
-            icon: Icons.qr_code, // Icono de código QR
-            title: 'Probar QR (Imagen)', // Título del item
+            icon: Icons.grass, // Icono de planta/grass
+            title: 'Información de Plantas', // Título del item
             onTap: () {
               // Acción al tocar
               Navigator.pop(context); // Cierra el drawer
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const TestQRWithImage(),
+                  builder: (context) => const PlantInfoScreen(),
                 ),
               );
             },
           ),
-          // =========================================================
+          // ===========================================================
           
           // NUEVO: Item para seguimiento de actividades
           _buildDrawerItem(

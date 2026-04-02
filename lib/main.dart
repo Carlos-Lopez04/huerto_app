@@ -1,4 +1,3 @@
-
 // Importa el paquete de Flutter, necesario para desarrollar aplicaciones Flutter
 import 'package:flutter/material.dart';
 // Importa el tema personalizado de la aplicación
@@ -7,9 +6,32 @@ import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/screens/home_screen.dart';
 // Importa las fuentes tipográficas personalizadas de la aplicación
 import 'package:huerto_app/themes/app_font.dart';
+// Importa el paquete para cargar variables de entorno desde archivo .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+// Importa la pantalla de login
+import 'package:huerto_app/screens/login_screen.dart';
+// Importa el servicio de autenticación
+import 'package:huerto_app/services/auth_service.dart';
 
 // Función principal que inicia la aplicación Flutter
-void main() => runApp(const MyApp());
+// Se agrega 'async' porque await para cargar el archivo .env
+void main() async {
+  // Inicializar WidgetsBinding
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Cargar variables de entorno desde el archivo .env en la raíz del proyecto
+  // El método load() es asíncrono y puede lanzar excepciones si el archivo no existe
+  try {
+    await dotenv.load(fileName: ".env");
+    print('✅ Archivo .env cargado correctamente');
+    print('🔑 API Key configurada: ${dotenv.env['API_KEY'] != null ? 'Sí' : 'No'}');
+  } catch (e) {
+    print('❌ Error al cargar archivo .env: $e');
+    // La app sigue funcionando, pero las funciones que requieran API no funcionarán
+  }
+  
+  runApp(const MyApp());
+}
 
 // Clase principal de la aplicación, que extiende StatelessWidget (sin estado interno)
 class MyApp extends StatelessWidget {
@@ -30,7 +52,13 @@ class MyApp extends StatelessWidget {
                   .bottomNavUnselected, // Estilo para etiquetas no seleccionadas
             ),
           ),
-      home: const HomeScreen(), // Pantalla inicial al abrir la aplicación
+      // Cambiar HomeScreen por LoginScreen como pantalla inicial
+      home: const LoginScreen(),
+      // Configurar rutas adicionales (opcional)
+      routes: {
+        '/home': (context) => const HomeScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
     );
   }
 }
