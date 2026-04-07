@@ -11,7 +11,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // Importa la pantalla de login
 import 'package:huerto_app/screens/login_screen.dart';
 // Importa el servicio de autenticación
-import 'package:huerto_app/services/auth_service.dart';
 
 // Función principal que inicia la aplicación Flutter
 // Se agrega 'async' porque await para cargar el archivo .env

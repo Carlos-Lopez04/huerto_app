@@ -11,10 +11,10 @@ import 'package:huerto_app/config/widgets/avatar_widget.dart'; // Importar widge
 import 'package:huerto_app/services/user_service.dart'; // Importar servicio de usuario para estadísticas
 import 'package:huerto_app/screens/camera/camera_screen.dart'; // Importar pantalla de cámara
 import 'package:huerto_app/screens/camera/qr_scanner_screen.dart'; // Importar pantalla de escáner QR
-import 'package:huerto_app/screens/camera/test_qr_with_image.dart'; // IMPORTAR PANTALLA DE PRUEBA QR
+// IMPORTAR PANTALLA DE PRUEBA QR
 import 'dart:io'; // Importar para manejar archivos
 import 'package:huerto_app/screens/plants_info_screen.dart'; // Importar pantalla de información de plantas
-
+import 'package:huerto_app/screens/camera/test_qr_with_image.dart';
 
 /*
     Clase principal para manejar el menú de navegación de la aplicación
@@ -116,20 +116,19 @@ class MenuApp {
           
           // ========== NUEVO: BOTÓN DE PRUEBA QR CON IMAGEN ==========
           // Opción 3: Probar QR con Imagen (para desarrollo/pruebas)
-          // _buildDrawerItem(
-          //   icon: Icons.qr_code, // Icono de código QR
-          //   title: 'Probar QR (Imagen)', // Título del item
-          //   onTap: () {
-              // Acción al tocar
-          //     Navigator.pop(context); // Cierra el drawer
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const TestQRWithImage(),
-          //       ),
-          //     );
-          //   },
-          // ),
+          _buildDrawerItem(
+            icon: Icons.qr_code,
+            title: 'Probar QR (Imagen)',  // 👈 COMA AGREGADA
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TestQRWithImage(),  // 👈 Asume que existe esta clase
+                ),
+              );
+            },
+          ),
           // =========================================================
           
           // ========== NUEVO: BOTÓN DE INFORMACIÓN DE PLANTAS ==========

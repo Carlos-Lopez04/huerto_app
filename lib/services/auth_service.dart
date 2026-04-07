@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -9,91 +8,76 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
   static const String _rememberMeKey = 'remember_me';
-  
-  // Configuración del backend - CAMBIAR SEGÚN TU SERVIDOR
-  static const String _baseUrl = 'https://tu-backend.com/api'; // ← Cambiar por tu URL real
-  static const int _timeoutSeconds = 30;
+  static const String _usersKey = 'registered_users';
   
   SharedPreferences? _prefs;
   
-  // Inicializar SharedPreferences
   Future<void> _initPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
   }
   
   // ========== MÉTODOS DE AUTENTICACIÓN ==========
   
-  // Login con email y contraseña
   Future<Map<String, dynamic>> login(LoginModel loginData) async {
     await _initPrefs();
     
-    try {
+    if (kDebugMode) {
+      print('🔐 Intentando login para: ${loginData.email}');
+    }
+    
+    final users = await _getRegisteredUsers();
+    
+    if (users.isEmpty) {
+      users['test@test.com'] = {
+        'password': '123456',
+        'name': 'Usuario Test',
+        'gender': 'masculino',
+      };
+      await _saveRegisteredUsers(users);
+    }
+    
+    final userData = users[loginData.email];
+    
+    if (userData != null && userData['password'] == loginData.password) {
+      final user = UserModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: userData['name'] ?? loginData.email.split('@')[0],
+        email: loginData.email,
+        gender: userData['gender'] == 'femenino' 
+            ? UserGender.femenino 
+            : UserGender.masculino,
+        totalPoints: userData['totalPoints'] ?? 0,
+        level: userData['level'] ?? 1,
+        completedActivityIds: userData['completedActivities'] != null 
+            ? List<String>.from(userData['completedActivities']) 
+            : [],
+        favoriteActivityIds: userData['favoriteActivities'] != null 
+            ? List<String>.from(userData['favoriteActivities']) 
+            : [],
+        createdAt: DateTime.now(), // ← Agregar createdAt
+      );
+      
+      final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
+      await _saveSession(token, user, loginData.rememberMe);
+      
       if (kDebugMode) {
-        print('🔐 Intentando login para: ${loginData.email}');
+        print('✅ Login exitoso para: ${user.name}');
       }
       
-      final response = await http.post(
-        Uri.parse('$_baseUrl/login'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(loginData.toJson()),
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (kDebugMode) {
-        print('📡 Respuesta código: ${response.statusCode}');
-      }
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        
-        if (data['success'] == true || data['status'] == 'success') {
-          final user = UserModel.fromJson(data['user'] ?? data['data']['user']);
-          final token = data['token'] ?? data['data']['token'];
-          
-          // Guardar sesión
-          await _saveSession(token, user, loginData.rememberMe);
-          
-          if (kDebugMode) {
-            print('✅ Login exitoso para: ${user.name}');
-          }
-          
-          return {
-            'success': true,
-            'user': user,
-            'token': token,
-            'message': data['message'] ?? 'Login exitoso',
-          };
-        } else {
-          return {
-            'success': false,
-            'error': data['message'] ?? 'Credenciales incorrectas',
-          };
-        }
-      } else if (response.statusCode == 401) {
-        return {
-          'success': false,
-          'error': 'Email o contraseña incorrectos',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Error del servidor (${response.statusCode})',
-        };
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error de conexión: $e');
-      }
       return {
-        'success': false,
-        'error': 'Error de conexión. Verifica tu internet.',
+        'success': true,
+        'user': user,
+        'token': token,
+        'message': 'Login exitoso',
       };
     }
+    
+    return {
+      'success': false,
+      'error': 'Email o contraseña incorrectos',
+    };
   }
   
-  // Registrar nuevo usuario
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
@@ -102,117 +86,74 @@ class AuthService {
   }) async {
     await _initPrefs();
     
-    try {
-      if (kDebugMode) {
-        print('📝 Registrando usuario: $email');
-      }
-      
-      final response = await http.post(
-        Uri.parse('$_baseUrl/register'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-          'password_confirmation': password,
-          'gender': gender == UserGender.masculino ? 'masculino' : 'femenino',
-        }),
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        
-        if (data['success'] == true || data['status'] == 'success') {
-          final user = UserModel.fromJson(data['user'] ?? data['data']['user']);
-          final token = data['token'] ?? data['data']['token'];
-          
-          // Guardar sesión automáticamente después del registro
-          await _saveSession(token, user, false);
-          
-          if (kDebugMode) {
-            print('✅ Usuario registrado: ${user.name}');
-          }
-          
-          return {
-            'success': true,
-            'user': user,
-            'token': token,
-            'message': data['message'] ?? 'Registro exitoso',
-          };
-        } else {
-          return {
-            'success': false,
-            'error': data['message'] ?? 'Error en el registro',
-            'errors': data['errors'],
-          };
-        }
-      } else if (response.statusCode == 422) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final errors = data['errors'];
-        String errorMessage = '';
-        
-        if (errors != null) {
-          if (errors['email'] != null) {
-            errorMessage = errors['email'][0];
-          } else if (errors['password'] != null) {
-            errorMessage = errors['password'][0];
-          } else if (errors['name'] != null) {
-            errorMessage = errors['name'][0];
-          }
-        }
-        
-        return {
-          'success': false,
-          'error': errorMessage.isEmpty ? 'Datos inválidos' : errorMessage,
-          'errors': errors,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Error en el registro (${response.statusCode})',
-        };
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error de conexión: $e');
-      }
+    if (kDebugMode) {
+      print('📝 Registrando usuario: $email');
+    }
+    
+    if (name.isEmpty) {
+      return {'success': false, 'error': 'El nombre es requerido'};
+    }
+    
+    if (email.isEmpty || !_isValidEmail(email)) {
+      return {'success': false, 'error': 'Email inválido'};
+    }
+    
+    if (password.length < 6) {
+      return {'success': false, 'error': 'La contraseña debe tener al menos 6 caracteres'};
+    }
+    
+    final users = await _getRegisteredUsers();
+    
+    if (users.containsKey(email)) {
       return {
         'success': false,
-        'error': 'Error de conexión. Verifica tu internet.',
+        'error': 'Este email ya está registrado',
       };
     }
+    
+    users[email] = {
+      'password': password,
+      'name': name,
+      'gender': gender == UserGender.femenino ? 'femenino' : 'masculino',
+      'totalPoints': 0,
+      'level': 1,
+      'completedActivities': [],
+      'favoriteActivities': [],
+      'registeredAt': DateTime.now().toIso8601String(),
+    };
+    
+    await _saveRegisteredUsers(users);
+    
+    final user = UserModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      email: email,
+      gender: gender,
+      totalPoints: 0,
+      level: 1,
+      completedActivityIds: [],
+      favoriteActivityIds: [],
+      createdAt: DateTime.now(), // ← Agregar createdAt
+    );
+    
+    final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
+    await _saveSession(token, user, false);
+    
+    if (kDebugMode) {
+      print('✅ Usuario registrado: $name ($email)');
+    }
+    
+    return {
+      'success': true,
+      'user': user,
+      'token': token,
+      'message': 'Registro exitoso. ¡Bienvenido!',
+    };
   }
   
-  // Cerrar sesión
   Future<Map<String, dynamic>> logout() async {
     await _initPrefs();
     
-    final token = _prefs?.getString(_tokenKey);
-    
-    if (token != null && token.isNotEmpty) {
-      try {
-        final response = await http.post(
-          Uri.parse('$_baseUrl/logout'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ).timeout(Duration(seconds: _timeoutSeconds));
-        
-        if (kDebugMode) {
-          print('📡 Logout código: ${response.statusCode}');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('⚠️ Error en logout remoto: $e');
-        }
-      }
-    }
-    
-    // Limpiar sesión local
     await _prefs?.remove(_tokenKey);
     await _prefs?.remove(_userKey);
     await _prefs?.remove(_rememberMeKey);
@@ -223,59 +164,122 @@ class AuthService {
     };
   }
   
+  // ========== MÉTODOS DE GESTIÓN DE USUARIOS ==========
+  
+  Future<Map<String, Map<String, dynamic>>> _getRegisteredUsers() async {
+    await _initPrefs();
+    final usersJson = _prefs?.getString(_usersKey);
+    
+    if (usersJson != null && usersJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> decoded = jsonDecode(usersJson);
+        final Map<String, Map<String, dynamic>> result = {};
+        
+        decoded.forEach((key, value) {
+          result[key] = Map<String, dynamic>.from(value);
+        });
+        
+        return result;
+      } catch (e) {
+        return {};
+      }
+    }
+    
+    return {};
+  }
+  
+  Future<void> _saveRegisteredUsers(Map<String, Map<String, dynamic>> users) async {
+    await _initPrefs();
+    await _prefs?.setString(_usersKey, jsonEncode(users));
+  }
+  
+  Future<bool> updateUserPoints(String email, int pointsToAdd) async {
+    await _initPrefs();
+    
+    final users = await _getRegisteredUsers();
+    
+    if (users.containsKey(email)) {
+      final currentPoints = users[email]?['totalPoints'] ?? 0;
+      final currentLevel = users[email]?['level'] ?? 1;
+      
+      users[email]?['totalPoints'] = currentPoints + pointsToAdd;
+      
+      final newLevel = ((currentPoints + pointsToAdd) / 100).floor() + 1;
+      if (newLevel > currentLevel) {
+        users[email]?['level'] = newLevel;
+      }
+      
+      await _saveRegisteredUsers(users);
+      
+      final currentUser = await getCurrentUser();
+      if (currentUser != null && currentUser.email == email) {
+        final updatedUser = UserModel(
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email,
+          gender: currentUser.gender,
+          totalPoints: currentPoints + pointsToAdd,
+          level: newLevel,
+          completedActivityIds: currentUser.completedActivityIds,
+          favoriteActivityIds: currentUser.favoriteActivityIds,
+          createdAt: currentUser.createdAt, // ← Agregar createdAt
+        );
+        
+        final token = await getToken();
+        if (token != null) {
+          await _saveSession(token, updatedUser, true);
+        }
+      }
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
+  Future<bool> addCompletedActivity(String email, String activityId) async {
+    await _initPrefs();
+    
+    final users = await _getRegisteredUsers();
+    
+    if (users.containsKey(email)) {
+      List<String> completedActivities = [];
+      if (users[email]?.containsKey('completedActivities') == true) {
+        completedActivities = List<String>.from(users[email]?['completedActivities'] ?? []);
+      }
+      
+      if (!completedActivities.contains(activityId)) {
+        completedActivities.add(activityId);
+        users[email]?['completedActivities'] = completedActivities;
+        await _saveRegisteredUsers(users);
+      }
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
   // ========== MÉTODOS DE SESIÓN ==========
   
-  // Guardar sesión
   Future<void> _saveSession(String token, UserModel user, bool rememberMe) async {
+    await _initPrefs();
     await _prefs?.setString(_tokenKey, token);
     await _prefs?.setString(_userKey, jsonEncode(user.toJson()));
     await _prefs?.setBool(_rememberMeKey, rememberMe);
   }
   
-  // Verificar si hay sesión activa
   Future<bool> isLoggedIn() async {
     await _initPrefs();
     final token = _prefs?.getString(_tokenKey);
-    final rememberMe = _prefs?.getBool(_rememberMeKey) ?? false;
-    
-    // Si no hay token, no hay sesión
-    if (token == null || token.isEmpty) {
-      return false;
-    }
-    
-    // Si no está marcado "Recordarme", validar con el servidor
-    if (!rememberMe) {
-      return await _validateToken(token);
-    }
-    
-    return true;
+    return token != null && token.isNotEmpty;
   }
   
-  // Validar token con el servidor
-  Future<bool> _validateToken(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/validate-token'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(Duration(seconds: 10));
-      
-      return response.statusCode == 200;
-    } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Error validando token: $e');
-      }
-      return false;
-    }
-  }
-  
-  // Obtener usuario actual
   Future<UserModel?> getCurrentUser() async {
     await _initPrefs();
     final userJson = _prefs?.getString(_userKey);
     
-    if (userJson != null) {
+    if (userJson != null && userJson.isNotEmpty) {
       try {
         final Map<String, dynamic> json = jsonDecode(userJson);
         return UserModel.fromJson(json);
@@ -286,13 +290,14 @@ class AuthService {
     return null;
   }
   
-  // Actualizar usuario en sesión local
   Future<void> updateLocalUser(UserModel user) async {
     await _initPrefs();
-    await _prefs?.setString(_userKey, jsonEncode(user.toJson()));
+    final token = await getToken();
+    if (token != null) {
+      await _saveSession(token, user, true);
+    }
   }
   
-  // Obtener token actual
   Future<String?> getToken() async {
     await _initPrefs();
     return _prefs?.getString(_tokenKey);
@@ -300,112 +305,60 @@ class AuthService {
   
   // ========== MÉTODOS DE PERFIL ==========
   
-  // Obtener perfil del usuario desde el servidor
-  Future<Map<String, dynamic>> getProfile() async {
-    final token = await getToken();
-    
-    if (token == null) {
-      return {
-        'success': false,
-        'error': 'No hay sesión activa',
-      };
-    }
-    
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/profile'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final user = UserModel.fromJson(data['user'] ?? data['data']);
-        
-        // Actualizar usuario local
-        await updateLocalUser(user);
-        
-        return {
-          'success': true,
-          'user': user,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Error al obtener perfil',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'error': 'Error de conexión',
-      };
-    }
-  }
-  
-  // Actualizar perfil
   Future<Map<String, dynamic>> updateProfile({
     required String name,
     required UserGender gender,
   }) async {
-    final token = await getToken();
+    await _initPrefs();
     
-    if (token == null) {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) {
       return {
         'success': false,
         'error': 'No hay sesión activa',
       };
     }
     
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'name': name,
-          'gender': gender == UserGender.masculino ? 'masculino' : 'femenino',
-        }),
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final user = UserModel.fromJson(data['user'] ?? data['data']);
-        
-        // Actualizar usuario local
-        await updateLocalUser(user);
-        
-        return {
-          'success': true,
-          'user': user,
-          'message': 'Perfil actualizado',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Error al actualizar perfil',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'error': 'Error de conexión',
-      };
+    final users = await _getRegisteredUsers();
+    if (users.containsKey(currentUser.email)) {
+      users[currentUser.email]?['name'] = name;
+      users[currentUser.email]?['gender'] = gender == UserGender.femenino ? 'femenino' : 'masculino';
+      await _saveRegisteredUsers(users);
     }
+    
+    final updatedUser = UserModel(
+      id: currentUser.id,
+      name: name,
+      email: currentUser.email,
+      gender: gender,
+      totalPoints: currentUser.totalPoints,
+      level: currentUser.level,
+      completedActivityIds: currentUser.completedActivityIds,
+      favoriteActivityIds: currentUser.favoriteActivityIds,
+      createdAt: currentUser.createdAt, // ← Agregar createdAt
+    );
+    
+    final token = await getToken();
+    if (token != null) {
+      await _saveSession(token, updatedUser, true);
+    }
+    
+    return {
+      'success': true,
+      'user': updatedUser,
+      'message': 'Perfil actualizado',
+    };
   }
   
-  // Cambiar contraseña
   Future<Map<String, dynamic>> changePassword({
     required String currentPassword,
     required String newPassword,
     required String confirmPassword,
   }) async {
-    final token = await getToken();
+    await _initPrefs();
     
-    if (token == null) {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) {
       return {
         'success': false,
         'error': 'No hay sesión activa',
@@ -422,53 +375,32 @@ class AuthService {
     if (newPassword.length < 6) {
       return {
         'success': false,
-        'error': 'La contraseña debe tener al menos 6 caracteres',
+        'error': 'La nueva contraseña debe tener al menos 6 caracteres',
       };
     }
     
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/change-password'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'current_password': currentPassword,
-          'new_password': newPassword,
-          'new_password_confirmation': confirmPassword,
-        }),
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Contraseña actualizada',
-        };
-      } else if (response.statusCode == 422) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        return {
-          'success': false,
-          'error': data['message'] ?? 'Error en la validación',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Error al cambiar contraseña',
-        };
-      }
-    } catch (e) {
+    final users = await _getRegisteredUsers();
+    final userData = users[currentUser.email];
+    
+    if (userData == null || userData['password'] != currentPassword) {
       return {
         'success': false,
-        'error': 'Error de conexión',
+        'error': 'Contraseña actual incorrecta',
       };
     }
+    
+    users[currentUser.email]?['password'] = newPassword;
+    await _saveRegisteredUsers(users);
+    
+    return {
+      'success': true,
+      'message': 'Contraseña actualizada correctamente',
+    };
   }
   
-  // ========== MÉTODOS DE RECUPERACIÓN ==========
-  
-  // Recuperar contraseña (enviar email)
   Future<Map<String, dynamic>> resetPassword(String email) async {
+    await _initPrefs();
+    
     if (!_isValidEmail(email)) {
       return {
         'success': false,
@@ -476,40 +408,44 @@ class AuthService {
       };
     }
     
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/forgot-password'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-        }),
-      ).timeout(Duration(seconds: _timeoutSeconds));
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        return {
-          'success': true,
-          'message': data['message'] ?? 'Se enviaron instrucciones a tu email',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'No se encontró una cuenta con ese email',
-        };
-      }
-    } catch (e) {
+    final users = await _getRegisteredUsers();
+    
+    if (users.containsKey(email)) {
       return {
-        'success': false,
-        'error': 'Error de conexión',
+        'success': true,
+        'message': 'Se enviaron instrucciones de recuperación a $email',
       };
     }
+    
+    return {
+      'success': false,
+      'error': 'No se encontró una cuenta con ese email',
+    };
+  }
+  
+  Future<Map<String, dynamic>> getUserStats() async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) {
+      return {
+        'success': false,
+        'error': 'No hay sesión activa',
+      };
+    }
+    
+    return {
+      'success': true,
+      'stats': {
+        'totalPoints': currentUser.totalPoints,
+        'level': currentUser.level,
+        'completedActivities': currentUser.completedActivityIds.length,
+        'favoriteActivities': currentUser.favoriteActivityIds.length,
+        'pointsToNextLevel': 100 - (currentUser.totalPoints % 100),
+      },
+    };
   }
   
   // ========== MÉTODOS AUXILIARES ==========
   
-  // Validar email
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(email);

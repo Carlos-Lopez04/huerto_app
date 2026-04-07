@@ -1,4 +1,4 @@
-// screens/activity_tracking_screen.dart - PARTE CORREGIDA
+// screens/activity_tracking_screen.dart
 // Importa paquetes necesarios para la pantalla de seguimiento de actividades
 import 'package:flutter/material.dart';
 import 'package:huerto_app/models/user_model.dart';
