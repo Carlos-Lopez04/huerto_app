@@ -89,77 +89,6 @@ class Achievement {
   }
 
   /*
-    Constructor factory para crear Achievement desde JSON
-  */
-  factory Achievement.fromJson(Map<String, dynamic> json) {
-    return Achievement(
-      id: json['id']?.toString() ??
-          '0', // Convierte a string o usa '0' por defecto
-      title: json['title'] ?? '', // Título o string vacío
-      description: json['description'] ?? '', // Descripción o string vacío
-      category: _parseCategory(json['category'] ?? ''), // Parsea la categoría
-      icon: json['icon'] ?? '🏆', // Icono o emoji de trofeo por defecto
-      color: json['color'] ?? 'freshMint', // Color o 'freshMint' por defecto
-      requiredPoints: json['points'] ?? 0, // Puntos o 0 por defecto
-      currentProgress: json['currentProgress'] ?? 0, // Progreso actual o 0
-      totalRequired: json['totalRequired'] ?? 1, // Total requerido o 1
-      isSecret: json['isSecret'] ?? false, // Es secreto o false
-      level: _parseLevel(json['level'] ?? 'bronze'), // Parsea el nivel
-      requirements:
-          List<String>.from(json['requirements'] ?? []), // Lista de requisitos
-      unlockedDescription: json[
-          'unlockedDescription'], // Descripción al desbloquear (puede ser null)
-    );
-  }
-
-  /*
-    Convierte string de categoría a enum AchievementCategory
-  */
-  static AchievementCategory _parseCategory(String category) {
-    switch (category.toLowerCase()) {
-      // Convierte a minúsculas para comparación
-      case 'cultivo':
-        return AchievementCategory.cultivo; // Categoría cultivo
-      case 'hábitos':
-      case 'habitos':
-        return AchievementCategory.habitos; // Categoría hábitos
-      case 'dedicación':
-      case 'dedicacion':
-        return AchievementCategory.dedicacion; // Categoría dedicación
-      case 'habilidad':
-        return AchievementCategory.habilidad; // Categoría habilidad
-      case 'social':
-        return AchievementCategory.social; // Categoría social
-      case 'colección':
-      case 'coleccion':
-        return AchievementCategory.coleccion; // Categoría colección
-      default:
-        return AchievementCategory.cultivo; // Por defecto: cultivo
-    }
-  }
-
-  /*
-    Convierte string de nivel a enum AchievementLevel
-  */
-  static AchievementLevel _parseLevel(String level) {
-    switch (level.toLowerCase()) {
-      // Convierte a minúsculas
-      case 'bronze':
-        return AchievementLevel.bronze; // Nivel bronce
-      case 'silver':
-        return AchievementLevel.silver; // Nivel plata
-      case 'gold':
-        return AchievementLevel.gold; // Nivel oro
-      case 'platinum':
-        return AchievementLevel.platinum; // Nivel platino
-      case 'diamond':
-        return AchievementLevel.diamond; // Nivel diamante
-      default:
-        return AchievementLevel.bronze; // Por defecto: bronce
-    }
-  }
-
-  /*
     Convierte nombre de color a objeto Color
   */
   static Color _getColor(String colorName) {
@@ -183,26 +112,6 @@ class Achievement {
     }
   }
 
-  /*
-    Convierte Achievement a mapa JSON
-  */
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'category': category.name, // Usa el nombre del enum
-      'icon': icon,
-      'color': color,
-      'points': requiredPoints,
-      'currentProgress': currentProgress,
-      'totalRequired': totalRequired,
-      'isSecret': isSecret,
-      'level': level.name, // Usa el nombre del enum
-      'requirements': requirements,
-      'unlockedDescription': unlockedDescription,
-    };
-  }
 }
 
 /*
@@ -250,45 +159,6 @@ class AchievementCategoryModel {
     required this.progressPercentage, // Requerido: porcentaje de progreso
     required this.achievements, // Requerido: lista de logros
   });
-
-  /*
-    Constructor factory para crear desde JSON
-  */
-  factory AchievementCategoryModel.fromJson(Map<String, dynamic> json) {
-    final achievementsJson = json['achievements'] as List? ??
-        []; // Obtiene lista de logros o lista vacía
-    return AchievementCategoryModel(
-      name: json['name'] ?? '', // Nombre o string vacío
-      emoji: json['emoji'] ?? '', // Emoji o string vacío
-      color: json['color'] ?? '', // Color o string vacío
-      totalAchievements: json['totalAchievements'] ?? 0, // Total o 0
-      unlockedAchievements:
-          json['unlockedAchievements'] ?? 0, // Desbloqueados o 0
-      progressPercentage:
-          (json['progressPercentage'] ?? 0.0).toDouble(), // Porcentaje o 0.0
-      achievements: achievementsJson
-          .map((achievementJson) => Achievement.fromJson(
-              achievementJson)) // Convierte cada JSON a Achievement
-          .toList(), // Convierte a lista
-    );
-  }
-
-  /*
-    Convierte a mapa JSON
-  */
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'emoji': emoji,
-      'color': color,
-      'totalAchievements': totalAchievements,
-      'unlockedAchievements': unlockedAchievements,
-      'progressPercentage': progressPercentage,
-      'achievements': achievements
-          .map((a) => a.toJson())
-          .toList(), // Convierte cada Achievement a JSON
-    };
-  }
 
   /*
     Obtiene el nombre en español para mostrar

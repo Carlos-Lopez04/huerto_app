@@ -344,33 +344,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: 24),
-                  
-                  // Credenciales de prueba (siempre visibles para facilitar pruebas)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Column(
-                      children: [
-                        Text(
-                          '🔐 Credenciales de prueba:',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Email: test@test.com',
-                          style: TextStyle(fontSize: 11),
-                        ),
-                        Text(
-                          'Contraseña: 123456',
-                          style: TextStyle(fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
