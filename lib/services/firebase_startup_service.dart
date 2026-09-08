@@ -7,8 +7,12 @@ class FirebaseStartupService {
   const FirebaseStartupService._();
 
   static Future<bool> initialize() async {
-    if (Firebase.apps.isNotEmpty) {
-      return true;
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        return true;
+      }
+    } catch (_) {
+      // Firebase isn't initialized yet; fall through to initializeApp().
     }
 
     try {
