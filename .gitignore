@@ -44,7 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase config files
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-lib/firebase_options.dart
+# Firebase client configuration is safe to version: it contains public app
+# identifiers, not server credentials. Keep it available to every clone.

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/login_model.dart';
@@ -13,8 +12,8 @@ class AuthService {
   static const String _userKey = 'user_data';
   static const String _rememberMeKey = 'remember_me';
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   SharedPreferences? _prefs;
 
@@ -164,7 +163,11 @@ class AuthService {
   }
 
   Future<bool> isLoggedIn() async {
-    return _auth.currentUser != null;
+    try {
+      return _auth.currentUser != null;
+    } on FirebaseException {
+      return false;
+    }
   }
 
   Future<UserModel?> getCurrentUser() async {

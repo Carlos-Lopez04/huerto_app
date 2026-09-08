@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "918933909191",
+    "project_id": "huerto-app-d0d8b",
+    "storage_bucket": "huerto-app-d0d8b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918933909191:android:952aec267570c9bf5b98e2",
+        "android_client_info": {
+          "package_name": "com.example.huerto_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "918933909191-usodbegscl8lrml98am7pc4g7r5t0dl7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm8EQs4Jgbkt1L8C0cGksunBOLw5MklcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "918933909191-usodbegscl8lrml98am7pc4g7r5t0dl7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

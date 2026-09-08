@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import '../firebase_options.dart';
+
 class FirebaseStartupService {
   const FirebaseStartupService._();
 
@@ -10,7 +12,9 @@ class FirebaseStartupService {
     }
 
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       return true;
     } on FirebaseException catch (e) {
       debugPrint('Firebase initialization failed: ${e.code} - ${e.message}');
