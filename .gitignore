@@ -44,5 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Kotlin compiler cache
+/android/.kotlin/
+
 # Firebase client configuration is safe to version: it contains public app
 # identifiers, not server credentials. Keep it available to every clone.
