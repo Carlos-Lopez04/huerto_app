@@ -52,3 +52,8 @@ app.*.map.json
 
 # Firebase client configuration is safe to version: it contains public app
 # identifiers, not server credentials. Keep it available to every clone.
+
+# Environment secrets (API keys, tokens)
+.env
+.env.*
+!.env.example
