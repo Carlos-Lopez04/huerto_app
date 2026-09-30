@@ -1,6 +1,7 @@
 // services/user_service.dart
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/models/activity_model.dart' hide UserGender;
@@ -88,7 +89,7 @@ class UserService {
         _notifyListeners(); // Notificar listeners
       }
     } catch (e) {
-      print('Error al cargar usuario: $e'); // Manejar error
+      debugPrint('Error al cargar usuario: $e'); // Manejar error
     }
   }
 
@@ -104,7 +105,7 @@ class UserService {
       await prefs.setString(
           _userPrefsKey, userJson); // Guardar en almacenamiento
     } catch (e) {
-      print('Error al guardar usuario: $e'); // Manejar error
+      debugPrint('Error al guardar usuario: $e'); // Manejar error
     }
   }
 
@@ -160,7 +161,7 @@ class UserService {
       // Guardar actividad completada en historial
       await _saveCompletedActivity(activityId, points);
     } catch (e) {
-      print('Error al completar actividad: $e'); // Manejar error
+      debugPrint('Error al completar actividad: $e'); // Manejar error
     }
   }
 
@@ -197,7 +198,7 @@ class UserService {
         return CompletedActivity.fromJson(map);
       }).toList();
     } catch (e) {
-      print('Error al obtener actividades completadas: $e');
+      debugPrint('Error al obtener actividades completadas: $e');
       return []; // Retornar lista vacía en caso de error
     }
   }
@@ -226,7 +227,7 @@ class UserService {
       // Guardar en SharedPreferences
       await prefs.setStringList(_completedActivitiesKey, activitiesJson);
     } catch (e) {
-      print('Error al guardar actividad completada: $e');
+      debugPrint('Error al guardar actividad completada: $e');
     }
   }
 
@@ -245,7 +246,7 @@ class UserService {
 
       return _calculateStats(completedActivities); // Calcular estadísticas
     } catch (e) {
-      print('Error al obtener estadísticas: $e');
+      debugPrint('Error al obtener estadísticas: $e');
       return _getDefaultStats(); // Estadísticas por defecto en caso de error
     }
   }
@@ -374,7 +375,7 @@ class UserService {
       _currentUser = UserModel.defaultUser();
       _notifyListeners(); // Notificar cambio
     } catch (e) {
-      print('Error al limpiar datos de usuario: $e');
+      debugPrint('Error al limpiar datos de usuario: $e');
     }
   }
 
@@ -405,7 +406,7 @@ class UserService {
 
       return localPath; // Retornar ruta local del archivo copiado
     } catch (e) {
-      print('Error al copiar avatar: $e');
+      debugPrint('Error al copiar avatar: $e');
       return assetPath; // Devolver path original si falla
     }
   }

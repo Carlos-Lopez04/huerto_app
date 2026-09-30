@@ -13,7 +13,6 @@ class TestQRWithImage extends StatefulWidget {
 
 class _TestQRWithImageState extends State<TestQRWithImage> {
   String? _lastScannedCode; // Cambiado nombre para mejor claridad
-  final bool _isAnalyzing = false; // Este campo se mantiene para futuras funcionalidades
 
   // Contenido simulado del código QR (puedes cambiarlo según el QR real)
   static const String _simulatedQRContent = 'https://www.fca.uabc.mx';
@@ -94,7 +93,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
+                          color: Colors.grey.withValues(alpha: 0.2),
                           blurRadius: 5,
                         ),
                       ],
@@ -149,7 +148,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
               decoration: BoxDecoration(
                 color: verdeGelido,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
+                border: Border.all(color: emeraldLeaf.withValues(alpha: 0.3)),
               ),
               child: SelectableText(
                 content,
@@ -170,7 +169,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -243,7 +242,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: Colors.grey.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -299,7 +298,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -372,7 +371,7 @@ class _TestQRWithImageState extends State<TestQRWithImage> {
                   decoration: BoxDecoration(
                     color: verdeGelido,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: emeraldLeaf.withOpacity(0.3)),
+                    border: Border.all(color: emeraldLeaf.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -72,8 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
       rememberMe: _rememberMe,
     );
     
-    final result = await _authService.login(loginData);
-    
+    Map<String, dynamic> result;
+    try {
+      result = await _authService.login(loginData);
+    } catch (e) {
+      result = {'success': false, 'error': 'Error inesperado: $e'};
+    }
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -131,16 +136,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.eco,
-                      size: 60,
-                      color: forestDepth,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        'lib/images/app_logo.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -157,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Bienvenido de vuelta',
                     style: AppFont.bodyMedium.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -169,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -229,20 +236,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 12),
                           
                           // Recordarme y Olvidé contraseña
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Checkbox(
-                                    value: _rememberMe,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _rememberMe = value ?? false;
-                                      });
-                                    },
-                                    activeColor: forestDepth,
+                                  SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Checkbox(
+                                      value: _rememberMe,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _rememberMe = value ?? false;
+                                        });
+                                      },
+                                      activeColor: forestDepth,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
                                   ),
+                                  const SizedBox(width: 6),
                                   const Text('Recordarme'),
                                 ],
                               ),
@@ -250,6 +269,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: () {
                                   _showResetPasswordDialog();
                                 },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
                                 child: const Text(
                                   '¿Olvidaste tu contraseña?',
                                   style: TextStyle(color: forestDepth),
@@ -264,9 +291,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: const EdgeInsets.all(12),
                               margin: const EdgeInsets.only(top: 12),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
+                                color: Colors.red.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [

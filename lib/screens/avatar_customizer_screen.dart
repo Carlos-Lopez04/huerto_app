@@ -354,7 +354,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
         borderRadius: BorderRadius.circular(20), // Bordes redondeados
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3), // Color de sombra
+            color: Colors.grey.withValues(alpha: 0.3), // Color de sombra
             blurRadius: 12, // Desenfoque de sombra
             offset: const Offset(0, 4), // Desplazamiento de sombra
           ),
@@ -362,7 +362,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
         border: Border.all(
           // Borde del contenedor
           color: const Color(0xFF2E7D32)
-              .withOpacity(0.3), // Color de borde semitransparente
+              .withValues(alpha: 0.3), // Color de borde semitransparente
           width: 2, // Grosor del borde
         ),
       ),
@@ -391,7 +391,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               boxShadow: [
                 BoxShadow(
                   color: Colors.black
-                      .withOpacity(0.1), // Sombra negra semitransparente
+                      .withValues(alpha: 0.1), // Sombra negra semitransparente
                   blurRadius: 8, // Desenfoque
                   offset: const Offset(0, 4), // Desplazamiento hacia abajo
                 ),
@@ -415,12 +415,12 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
                 horizontal: 16, vertical: 12), // Padding específico
             decoration: BoxDecoration(
               color: const Color(0xFF4CAF50)
-                  .withOpacity(0.1), // Fondo verde semitransparente
+                  .withValues(alpha: 0.1), // Fondo verde semitransparente
               borderRadius: BorderRadius.circular(12), // Bordes redondeados
               border: Border.all(
                 // Borde del contenedor
                 color: const Color(0xFF4CAF50)
-                    .withOpacity(0.3), // Borde verde semitransparente
+                    .withValues(alpha: 0.3), // Borde verde semitransparente
               ),
             ),
             child: Column(
@@ -466,7 +466,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
                       padding: const EdgeInsets.all(8), // Padding interno
                       decoration: BoxDecoration(
                         color: const Color(0xFF4CAF50)
-                            .withOpacity(0.2), // Fondo verde más intenso
+                            .withValues(alpha: 0.2), // Fondo verde más intenso
                         borderRadius:
                             BorderRadius.circular(8), // Bordes redondeados
                       ),
@@ -604,7 +604,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               vertical: 12, horizontal: 8), // Padding interno
           decoration: BoxDecoration(
             color: isSelected
-                ? activeColor.withOpacity(0.1)
+                ? activeColor.withValues(alpha: 0.1)
                 : Colors.transparent, // Fondo si está seleccionada
             borderRadius: BorderRadius.circular(8), // Bordes redondeados
             border: Border.all(
@@ -694,8 +694,8 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               final name = colorData['name'] as String; // Obtener nombre
               final isDefault =
                   colorData['default'] as bool; // Verificar si es por defecto
-              final isSelected = currentColor.value ==
-                  color.value; // Verificar si está seleccionado
+              final isSelected = currentColor.toARGB32() ==
+                  color.toARGB32(); // Verificar si está seleccionado
 
               return _buildColorOption(
                 // Widget de opción de color
@@ -741,7 +741,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               ? [
                   BoxShadow(
                     color: const Color(0xFF4CAF50)
-                        .withOpacity(0.3), // Sombra verde semitransparente
+                        .withValues(alpha: 0.3), // Sombra verde semitransparente
                     blurRadius: 6, // Desenfoque
                     offset: const Offset(0, 2), // Desplazamiento hacia abajo
                   ),
@@ -789,7 +789,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
                     horizontal: 4, vertical: 2), // Padding interno pequeño
                 decoration: BoxDecoration(
                   color: const Color(0xFF4CAF50)
-                      .withOpacity(0.1), // Fondo verde semitransparente
+                      .withValues(alpha: 0.1), // Fondo verde semitransparente
                   borderRadius:
                       BorderRadius.circular(4), // Bordes redondeados pequeños
                 ),
@@ -917,7 +917,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               ? [
                   BoxShadow(
                     color: const Color(0xFF4CAF50)
-                        .withOpacity(0.3), // Sombra verde semitransparente
+                        .withValues(alpha: 0.3), // Sombra verde semitransparente
                     blurRadius: 6, // Desenfoque
                     offset: const Offset(0, 2), // Desplazamiento hacia abajo
                   ),
@@ -961,7 +961,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
                     horizontal: 4, vertical: 2), // Padding interno pequeño
                 decoration: BoxDecoration(
                   color: const Color(0xFF4CAF50)
-                      .withOpacity(0.1), // Fondo verde semitransparente
+                      .withValues(alpha: 0.1), // Fondo verde semitransparente
                   borderRadius:
                       BorderRadius.circular(4), // Bordes redondeados pequeños
                 ),
@@ -1001,7 +1001,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
               ),
               elevation: 4, // Elevación para sombra
               shadowColor:
-                  const Color(0xFF1B5E20).withOpacity(0.5), // Color de sombra
+                  const Color(0xFF1B5E20).withValues(alpha: 0.5), // Color de sombra
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center, // Centrar contenido
@@ -1143,8 +1143,8 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
     final colorData = colorList.firstWhere(
       // Buscar color en la lista
       (item) =>
-          (item['color'] as Color).value ==
-          color.value, // Comparar valores de color
+          (item['color'] as Color).toARGB32() ==
+          color.toARGB32(), // Comparar valores de color
       orElse: () =>
           {'name': 'Personalizado'}, // Valor por defecto si no se encuentra
     );

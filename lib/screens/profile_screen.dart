@@ -295,7 +295,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Gradiente para línea
                         colors: [
                           Colors.transparent, // Transparente al inicio
-                          forestDepth.withOpacity(
+                          forestDepth.withValues(alpha: 
                               0.3), // Verde semitransparente en medio
                           Colors.transparent, // Transparente al final
                         ],
@@ -502,7 +502,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           boxShadow: AppGradients.innerShadow, // Sombra interna
           border: isSelectable // Borde solo si es seleccionable
               ? Border.all(
-                  color: emeraldLeaf.withOpacity(0.3),
+                  color: emeraldLeaf.withValues(alpha: 0.3),
                   width: 1) // Borde verde semitransparente
               : null,
         ),
@@ -576,7 +576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Container(
           padding: const EdgeInsets.all(12), // Padding interno
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2), // Fondo semitransparente del color
+            color: color.withValues(alpha: 0.2), // Fondo semitransparente del color
             shape: BoxShape.circle, // Forma circular
           ),
           child: Icon(icon, size: 24, color: color), // Icono con color
@@ -618,13 +618,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           gradient: LinearGradient(
             // Gradiente del botón
             colors: [
-              color.withOpacity(0.1), // Color semitransparente
-              color.withOpacity(0.05), // Color más transparente
+              color.withValues(alpha: 0.1), // Color semitransparente
+              color.withValues(alpha: 0.05), // Color más transparente
             ],
           ),
           borderRadius: BorderRadius.circular(12), // Bordes redondeados
           border: Border.all(
-              color: color.withOpacity(0.3)), // Borde semitransparente
+              color: color.withValues(alpha: 0.3)), // Borde semitransparente
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min, // Tamaño mínimo en el eje principal
@@ -652,10 +652,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 8), // Padding interno específico
       decoration: BoxDecoration(
-        color: freshMint.withOpacity(0.1), // Fondo verde menta semitransparente
+        color: freshMint.withValues(alpha: 0.1), // Fondo verde menta semitransparente
         borderRadius: BorderRadius.circular(20), // Bordes muy redondeados
         border: Border.all(
-            color: freshMint.withOpacity(0.3)), // Borde semitransparente
+            color: freshMint.withValues(alpha: 0.3)), // Borde semitransparente
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Tamaño mínimo en el eje principal
@@ -682,47 +682,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /*
       MÉTODOS PARA LAS ACCIONES
 
-      CAMBIAR FOTO DE PERFIL (NO IMPLEMENTADO COMPLETAMENTE)
-  */
-  void _changeProfilePhoto() {
-    showDialog(
-      // Mostrar diálogo
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cambiar foto',
-            style: AppFont.titleSmall), // Título del diálogo
-        content: const Text('Selecciona una opción',
-            style: AppFont.bodyMedium), // Contenido
-        actions: [
-          // Botones de acción
-          TextButton(
-            onPressed: () => Navigator.pop(context), // Cancelar
-            child: const Text('Cancelar', style: AppFont.bodyMedium),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Cerrar diálogo
-              _updateUser(_currentUser.copyWith(// Actualizar usuario
-                  // Nota: UserModel no tiene imageUrl, así que comentamos esto
-                  // imageUrl: 'https://example.com/nueva-foto.jpg',
-                  ));
-            },
-            child: const Text('Galería',
-                style: AppFont.bodyMedium), // Opción galería
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Cerrar diálogo
-            },
-            child: const Text('Cámara',
-                style: AppFont.bodyMedium), // Opción cámara
-          ),
-        ],
-      ),
-    );
-  }
-
-  /*
       EDITAR NOMBRE
   */
   void _editName() {

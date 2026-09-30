@@ -171,8 +171,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.star, color: Colors.white), // Icono de estrella
             const SizedBox(width: 8), // Espaciador horizontal
-            Text(message ??
-                '+$points puntos ganados!'), // Mensaje personalizado o por defecto
+            Expanded(
+              child: Text(message ??
+                  '+$points puntos ganados!'), // Mensaje personalizado o por defecto
+            ),
           ],
         ),
         duration: const Duration(seconds: 2), // Duración de 2 segundos
@@ -203,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Si hay nuevos logros
       Future.delayed(const Duration(milliseconds: 500), () {
         // Retrasar 500ms
+        if (!mounted) return;
         for (final achievement in newAchievements) {
           // Para cada logro nuevo
           ScaffoldMessenger.of(context).showSnackBar(
@@ -423,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
         boxShadow: AppGradients.cardShadow, // Sombra de tarjeta
         border: Border.all(
             color: freshMint
-                .withOpacity(0.3)), // Borde verde menta semitransparente
+                .withValues(alpha: 0.3)), // Borde verde menta semitransparente
       ),
       child: Column(
         crossAxisAlignment:
@@ -481,12 +484,12 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(bottom: 8), // Margen inferior
       padding: const EdgeInsets.all(8), // Padding interno
       decoration: BoxDecoration(
-        color: notification['color'].withOpacity(
+        color: notification['color'].withValues(alpha: 
             0.1), // Fondo con color de notificación semitransparente
         borderRadius: BorderRadius.circular(8), // Bordes redondeados
         border: Border.all(
             color: notification['color']
-                .withOpacity(0.3)), // Borde semitransparente
+                .withValues(alpha: 0.3)), // Borde semitransparente
       ),
       child: Row(
         children: [
@@ -495,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 40, // Alto fijo
             decoration: BoxDecoration(
               color: notification['color']
-                  .withOpacity(0.2), // Fondo circular semitransparente
+                  .withValues(alpha: 0.2), // Fondo circular semitransparente
               shape: BoxShape.circle, // Forma circular
             ),
             child: Center(
@@ -536,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 horizontal: 8, vertical: 4), // Padding interno pequeño
             decoration: BoxDecoration(
               color: notification['color']
-                  .withOpacity(0.2), // Fondo semitransparente
+                  .withValues(alpha: 0.2), // Fondo semitransparente
               borderRadius: BorderRadius.circular(12), // Bordes redondeados
             ),
             child: Row(
@@ -673,10 +676,10 @@ class _HomeScreenState extends State<HomeScreen> {
         width: MediaQuery.of(context).size.width *
             0.43, // Ancho relativo a la pantalla
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1), // Fondo semitransparente del color
+          color: color.withValues(alpha: 0.1), // Fondo semitransparente del color
           borderRadius: BorderRadius.circular(12), // Bordes redondeados
           border: Border.all(
-              color: color.withOpacity(0.3)), // Borde semitransparente
+              color: color.withValues(alpha: 0.3)), // Borde semitransparente
         ),
         child: Column(
           crossAxisAlignment:
@@ -690,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(6), // Padding interno pequeño
                   decoration: BoxDecoration(
                     color: color
-                        .withOpacity(0.2), // Fondo circular semitransparente
+                        .withValues(alpha: 0.2), // Fondo circular semitransparente
                     shape: BoxShape.circle, // Forma circular
                   ),
                   child: Text(
@@ -704,7 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 6, vertical: 2), // Padding interno pequeño
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2), // Fondo semitransparente
+                    color: color.withValues(alpha: 0.2), // Fondo semitransparente
                     borderRadius:
                         BorderRadius.circular(10), // Bordes redondeados
                   ),

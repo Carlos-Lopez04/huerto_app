@@ -34,6 +34,26 @@ Future<void> _initializeApp() async {
   }
 }
 
+/// Comportamiento de scroll global: evita el efecto elastico/estirado
+/// (bounce en iOS y stretch en Android) cuando se llega al limite.
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const ClampingScrollPhysics();
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -42,6 +62,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Huerto App',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       theme: AppTheme(selectedColor: 2).theme().copyWith(
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               selectedLabelStyle: AppFont.bottomNavSelected,

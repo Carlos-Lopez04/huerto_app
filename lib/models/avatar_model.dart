@@ -69,9 +69,9 @@ class AvatarModel {
   Map<String, dynamic> toMap() {
     return {
       'baseType': baseType.index, // Guarda el índice del enum
-      'skinColor': skinColor.value, // Guarda valor hexadecimal del color
-      'hairColor': hairColor.value, // Guarda valor hexadecimal del color
-      'eyeColor': eyeColor.value, // Guarda valor hexadecimal del color
+      'skinColor': skinColor.toARGB32(), // Guarda valor hexadecimal del color
+      'hairColor': hairColor.toARGB32(), // Guarda valor hexadecimal del color
+      'eyeColor': eyeColor.toARGB32(), // Guarda valor hexadecimal del color
       'hasGlasses': hasGlasses, // Guarda booleano
       'outfit': outfit, // Guarda string o null
       'expression': expression, // Guarda string o null
@@ -89,9 +89,9 @@ class AvatarModel {
       skinColor:
           Color(map['skinColor'] ?? 0xFFFFDBAC), // Crea Color desde valor hex
       hairColor: Color(
-          map['hairColor'] ?? Colors.black.value), // Crea Color desde valor hex
+          map['hairColor'] ?? Colors.black.toARGB32()), // Crea Color desde valor hex
       eyeColor: Color(
-          map['eyeColor'] ?? Colors.brown.value), // Crea Color desde valor hex
+          map['eyeColor'] ?? Colors.brown.toARGB32()), // Crea Color desde valor hex
       hasGlasses: map['hasGlasses'] ?? false, // Booleano o false por defecto
       outfit: map['outfit'], // String o null
       expression: map['expression'], // String o null

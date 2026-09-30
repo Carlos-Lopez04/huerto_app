@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/login_model.dart';
@@ -11,6 +13,25 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
   static const String _rememberMeKey = 'remember_me';
+
+  // Cuenta de administrador local para DESARROLLO (solo modo debug).
+  // Funciona sin configuracion, pero puede sobrescribirse al compilar con:
+  //   flutter run --dart-define=HUERTO_ADMIN_EMAIL=... \
+  //               --dart-define=HUERTO_ADMIN_PASSWORD=...
+  // En builds release (kDebugMode == false) esta cuenta NO existe.
+  static const String _dartAdminEmail =
+      String.fromEnvironment('HUERTO_ADMIN_EMAIL');
+  static const String _dartAdminPassword =
+      String.fromEnvironment('HUERTO_ADMIN_PASSWORD');
+  static const String _defaultAdminEmail = 'admin@uabc.edu.mx';
+  static const String _defaultAdminPassword = '141820';
+
+  // Credenciales efectivas: dart-define si se definio, si no, el valor local.
+  static String get _adminEmail =>
+      _dartAdminEmail.isNotEmpty ? _dartAdminEmail : _defaultAdminEmail;
+  static String get _adminPassword =>
+      _dartAdminPassword.isNotEmpty ? _dartAdminPassword : _defaultAdminPassword;
+  static const String _localAdminId = 'local_admin';
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
   FirebaseFirestore get _db => FirebaseFirestore.instance;
@@ -24,11 +45,22 @@ class AuthService {
   Future<Map<String, dynamic>> login(LoginModel loginData) async {
     await _initPrefs();
 
+    if (kDebugMode && _isLocalAdmin(loginData)) {
+      return _loginLocalAdmin(loginData.rememberMe);
+    }
+
     try {
-      final cred = await _auth.signInWithEmailAndPassword(
-        email: loginData.email,
-        password: loginData.password,
+      // La sesion solo se conserva entre arranques si se marco "Recordarme".
+      await _auth.setPersistence(
+        loginData.rememberMe ? Persistence.LOCAL : Persistence.NONE,
       );
+
+      final cred = await _auth
+          .signInWithEmailAndPassword(
+            email: loginData.email,
+            password: loginData.password,
+          )
+          .timeout(const Duration(seconds: 20));
 
       final user = cred.user;
 
@@ -40,7 +72,11 @@ class AuthService {
         return {'success': false, 'error': 'Debes verificar tu correo'};
       }
 
-      final doc = await _db.collection('usuarios').doc(user.uid).get();
+      final doc = await _db
+          .collection('usuarios')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 20));
       final data = doc.data();
 
       final userModel = UserModel(
@@ -71,6 +107,18 @@ class AuthService {
       return {'success': false, 'error': _mapFirebaseAuthError(e)};
     } on FirebaseException catch (e) {
       return {'success': false, 'error': _mapFirebaseCoreError(e)};
+    } on TimeoutException {
+      return {
+        'success': false,
+        'error':
+            'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.',
+      };
+    } catch (e) {
+      debugPrint('Error inesperado en login: $e');
+      return {
+        'success': false,
+        'error': 'No se pudo iniciar sesión. Intenta de nuevo.',
+      };
     }
   }
 
@@ -83,7 +131,7 @@ class AuthService {
     await _initPrefs();
 
     if (!_isValidEmail(email)) {
-      return {'success': false, 'error': 'Email invalido'};
+      return {'success': false, 'error': 'Email inválido'};
     }
 
     try {
@@ -155,6 +203,34 @@ class AuthService {
     }
   }
 
+  bool _isLocalAdmin(LoginModel loginData) {
+    if (!kDebugMode) return false;
+    if (_adminEmail.isEmpty || _adminPassword.isEmpty) return false;
+    return loginData.email.trim().toLowerCase() ==
+            _adminEmail.trim().toLowerCase() &&
+        loginData.password == _adminPassword;
+  }
+
+  Future<Map<String, dynamic>> _loginLocalAdmin(bool rememberMe) async {
+    final admin = UserModel(
+      id: _localAdminId,
+      name: 'Administrador',
+      email: _adminEmail,
+      gender: UserGender.masculino,
+      createdAt: DateTime.now(),
+      isAdmin: true,
+    );
+
+    await _saveSession(admin.id, admin, rememberMe);
+
+    return {
+      'success': true,
+      'user': admin,
+      'token': admin.id,
+      'isAdmin': true,
+    };
+  }
+
   Future<void> _saveSession(String token, UserModel user, bool rememberMe) async {
     await _initPrefs();
     await _prefs?.setString(_tokenKey, token);
@@ -163,11 +239,24 @@ class AuthService {
   }
 
   Future<bool> isLoggedIn() async {
-    try {
-      return _auth.currentUser != null;
-    } on FirebaseException {
-      return false;
+    await _initPrefs();
+    final rememberMe = _prefs?.getBool(_rememberMeKey) ?? false;
+    final token = _prefs?.getString(_tokenKey);
+
+    // Sesion local de administrador (solo desarrollo y con "Recordarme").
+    if (kDebugMode && token == _localAdminId && rememberMe) {
+      return true;
     }
+
+    try {
+      if (_auth.currentUser != null && rememberMe) {
+        return true;
+      }
+    } on FirebaseException {
+      // Firebase no disponible: solo se permitio la sesion local de admin.
+    }
+
+    return false;
   }
 
   Future<UserModel?> getCurrentUser() async {
@@ -198,32 +287,32 @@ class AuthService {
 
   String _mapFirebaseCoreError(FirebaseException error) {
     if (error.code == 'no-app') {
-      return 'Firebase no esta configurado todavia. Revisa la conexion del proyecto.';
+      return 'Firebase no está configurado todavía. Revisa la conexión del proyecto.';
     }
 
-    return error.message ?? 'Error de conexion con Firebase';
+    return error.message ?? 'Error de conexión con Firebase';
   }
 
   String _mapFirebaseAuthError(FirebaseAuthException error) {
     switch (error.code) {
       case 'invalid-email':
-        return 'El correo no tiene un formato valido';
+        return 'El correo no tiene un formato válido';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Correo o contrasena incorrectos';
+        return 'Correo o contraseña incorrectos';
       case 'email-already-in-use':
-        return 'Ese correo ya esta registrado';
+        return 'Ese correo ya está registrado';
       case 'weak-password':
-        return 'La contrasena es demasiado debil';
+        return 'La contraseña es demasiado débil';
       case 'user-disabled':
         return 'Esta cuenta fue deshabilitada';
       case 'too-many-requests':
-        return 'Demasiados intentos. Intenta de nuevo mas tarde';
+        return 'Demasiados intentos. Intenta de nuevo más tarde';
       case 'network-request-failed':
         return 'No se pudo conectar a internet';
       default:
-        return error.message ?? 'Error de autenticacion';
+        return error.message ?? 'Error de autenticación';
     }
   }
 }

@@ -111,7 +111,7 @@ class _PlantInfoScreenState extends State<PlantInfoScreen> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Buscar planta (ej: Tomate, Lechuga...)',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     prefixIcon: const Icon(Icons.search, color: Colors.white),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
@@ -126,7 +126,7 @@ class _PlantInfoScreenState extends State<PlantInfoScreen> {
                           )
                         : null,
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.2),
+                    fillColor: Colors.white.withValues(alpha: 0.2),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -254,7 +254,7 @@ class _PlantInfoScreenState extends State<PlantInfoScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange),
                 ),
@@ -280,7 +280,7 @@ class _PlantInfoScreenState extends State<PlantInfoScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.grass, size: 80, color: forestDepth.withOpacity(0.5)),
+          Icon(Icons.grass, size: 80, color: forestDepth.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           const Text(
             'Busca una planta para obtener información',
@@ -323,7 +323,7 @@ class _PlantInfoScreenState extends State<PlantInfoScreen> {
           Text(
             _plantInfo!.scientificName,
             style: AppFont.bodyMedium.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontStyle: FontStyle.italic,
             ),
           ),

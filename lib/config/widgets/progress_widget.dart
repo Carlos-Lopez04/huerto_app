@@ -43,7 +43,7 @@ class ProgressWidget extends StatelessWidget {
           // Sombra para efecto de elevación
           BoxShadow(
             color: forestDepth
-                .withOpacity(0.2), // Color de sombra semitransparente
+                .withValues(alpha: 0.2), // Color de sombra semitransparente
             blurRadius: 8, // Radio de desenfoque
             offset: const Offset(0, 4), // Desplazamiento hacia abajo
           ),
@@ -74,12 +74,12 @@ class ProgressWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   // Decoración del badge
                   color: Colors.white
-                      .withOpacity(0.2), // Color blanco semitransparente
+                      .withValues(alpha: 0.2), // Color blanco semitransparente
                   borderRadius:
                       BorderRadius.circular(20), // Bordes muy redondeados
                   border: Border.all(
                       color:
-                          Colors.white.withOpacity(0.3)), // Borde blanco sutil
+                          Colors.white.withValues(alpha: 0.3)), // Borde blanco sutil
                 ),
                 child: Text(
                   'Nivel $currentLevel', // Texto con el nivel
@@ -105,7 +105,7 @@ class ProgressWidget extends StatelessWidget {
                 height: 20, // Altura fija de 20px
                 decoration: BoxDecoration(
                   color: Colors.white
-                      .withOpacity(0.2), // Color blanco semitransparente
+                      .withValues(alpha: 0.2), // Color blanco semitransparente
                   borderRadius: BorderRadius.circular(10), // Bordes redondeados
                 ),
               ),

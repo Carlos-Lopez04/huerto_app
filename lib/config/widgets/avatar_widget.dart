@@ -43,7 +43,7 @@ class AvatarWidget extends StatelessWidget {
               boxShadow: showEffects // Si debe mostrar efectos de sombra
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(
+                        color: Colors.black.withValues(alpha: 
                             0.1), // Color de sombra semitransparente
                         blurRadius: 8, // Radio de desenfoque
                         offset:
@@ -238,7 +238,7 @@ class AvatarWidget extends StatelessWidget {
           border: Border.all(
             // Borde del marco de lentes
             color: Colors.grey[700]!
-                .withOpacity(0.7), // Color gris semitransparente
+                .withValues(alpha: 0.7), // Color gris semitransparente
             width: 1.5, // Ancho del borde
           ),
         ),
@@ -254,11 +254,11 @@ class AvatarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle, // Forma circular
                 color: Colors.grey[100]!
-                    .withOpacity(0.1), // Color muy transparente
+                    .withValues(alpha: 0.1), // Color muy transparente
                 border: Border.all(
                   // Borde del lente
                   color: Colors.grey[700]!
-                      .withOpacity(0.5), // Color gris semitransparente
+                      .withValues(alpha: 0.5), // Color gris semitransparente
                   width: 1, // Ancho del borde
                 ),
               ),
@@ -270,11 +270,11 @@ class AvatarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle, // Forma circular
                 color: Colors.grey[100]!
-                    .withOpacity(0.1), // Color muy transparente
+                    .withValues(alpha: 0.1), // Color muy transparente
                 border: Border.all(
                   // Borde del lente
                   color: Colors.grey[700]!
-                      .withOpacity(0.5), // Color gris semitransparente
+                      .withValues(alpha: 0.5), // Color gris semitransparente
                   width: 1, // Ancho del borde
                 ),
               ),
@@ -291,19 +291,19 @@ class AvatarWidget extends StatelessWidget {
 
   // Obtener color de overlay de piel
   Color _getSkinOverlayColor() {
-    return user.skinColor.withOpacity(0.15); // Muy sutil (15% opacidad)
+    return user.skinColor.withValues(alpha: 0.15); // Muy sutil (15% opacidad)
   }
 
   // Obtener color de overlay de cabello
   Color _getHairOverlayColor() {
     return user.hairColor
-        .withOpacity(0.25); // Un poco más visible (25% opacidad)
+        .withValues(alpha: 0.25); // Un poco más visible (25% opacidad)
   }
 
   // Obtener color de overlay de ojos
   Color _getEyeOverlayColor() {
     return user.eyeColor
-        .withOpacity(0.4); // Moderadamente visible (40% opacidad)
+        .withValues(alpha: 0.4); // Moderadamente visible (40% opacidad)
   }
 
   /*

@@ -13,7 +13,7 @@ class AppGradients {
   static Gradient get cardPrimary => LinearGradient(
         colors: [
           cloudWhite, // Blanco nube como color inicial
-          lightSage.withOpacity(0.5), // Verde salvia claro con transparencia
+          lightSage.withValues(alpha: 0.5), // Verde salvia claro con transparencia
         ],
         begin: Alignment.topLeft, // Punto inicial del gradiente
         end: Alignment.bottomRight, // Punto final del gradiente
@@ -23,10 +23,10 @@ class AppGradients {
   /// Gradiente vibrante para cards destacadas
   static Gradient get cardHighlight => LinearGradient(
         colors: [
-          emeraldLeaf.withOpacity(0.9), // Verde esmeralda con 90% opacidad
-          freshMint.withOpacity(0.8), // Verde menta fresco con 80% opacidad
+          emeraldLeaf.withValues(alpha: 0.9), // Verde esmeralda con 90% opacidad
+          freshMint.withValues(alpha: 0.8), // Verde menta fresco con 80% opacidad
           springGrass
-              .withOpacity(0.7), // Verde hierba primavera con 70% opacidad
+              .withValues(alpha: 0.7), // Verde hierba primavera con 70% opacidad
         ],
         begin: Alignment.centerLeft, // Comienza en el centro izquierdo
         end: Alignment.centerRight, // Termina en el centro derecho
@@ -36,9 +36,9 @@ class AppGradients {
   /// Gradiente sutil para fondos de sección
   static Gradient get backgroundSoft => LinearGradient(
         colors: [
-          paleOlive.withOpacity(0.1), // Verde oliva pálido muy transparente
-          paperCream.withOpacity(0.8), // Crema papel con buena opacidad
-          lightSage.withOpacity(0.2), // Verde salvia claro poco transparente
+          paleOlive.withValues(alpha: 0.1), // Verde oliva pálido muy transparente
+          paperCream.withValues(alpha: 0.8), // Crema papel con buena opacidad
+          lightSage.withValues(alpha: 0.2), // Verde salvia claro poco transparente
         ],
         begin: Alignment.topCenter, // Comienza en la parte superior central
         end: Alignment.bottomCenter, // Termina en la parte inferior central
@@ -73,8 +73,8 @@ class AppGradients {
   static Gradient get earthyCard => LinearGradient(
         colors: [
           sandyBeach, // Beige arena playa (color claro)
-          oakWood.withOpacity(0.7), // Marrón roble con 70% opacidad
-          warmClay.withOpacity(0.5), // Marrón arcilla con 50% opacidad
+          oakWood.withValues(alpha: 0.7), // Marrón roble con 70% opacidad
+          warmClay.withValues(alpha: 0.5), // Marrón arcilla con 50% opacidad
         ],
         begin: Alignment.topCenter, // Comienza arriba
         end: Alignment.bottomCenter, // Termina abajo
@@ -111,8 +111,8 @@ class AppGradients {
   /// Gradiente para botones secundarios
   static Gradient get buttonSecondary => LinearGradient(
         colors: [
-          springGrass.withOpacity(0.9), // Verde hierba primavera 90% opacidad
-          lightSage.withOpacity(0.8), // Verde salvia claro 80% opacidad
+          springGrass.withValues(alpha: 0.9), // Verde hierba primavera 90% opacidad
+          lightSage.withValues(alpha: 0.8), // Verde salvia claro 80% opacidad
         ],
         begin: Alignment.topCenter, // Comienza arriba
         end: Alignment.bottomCenter, // Termina abajo
@@ -146,7 +146,7 @@ class AppGradients {
   static Gradient get buttonDanger => LinearGradient(
         colors: [
           tomatoRed, // Rojo tomate
-          berryPink.withOpacity(0.8), // Rosa frutilla 80% opacidad
+          berryPink.withValues(alpha: 0.8), // Rosa frutilla 80% opacidad
         ],
         begin: Alignment.topLeft, // Comienza en esquina superior izquierda
         end: Alignment.bottomRight, // Termina en esquina inferior derecha
@@ -172,8 +172,8 @@ class AppGradients {
   /// Gradiente para encabezados de sección
   static Gradient get sectionHeader => LinearGradient(
         colors: [
-          forestDepth.withOpacity(0.2), // Verde bosque 20% transparente
-          emeraldLeaf.withOpacity(0.3), // Verde esmeralda 30% transparente
+          forestDepth.withValues(alpha: 0.2), // Verde bosque 20% transparente
+          emeraldLeaf.withValues(alpha: 0.3), // Verde esmeralda 30% transparente
           Colors.transparent, // Totalmente transparente al final
         ],
         begin: Alignment.topCenter, // Comienza arriba
@@ -184,8 +184,8 @@ class AppGradients {
   /// Gradiente para footer
   static Gradient get footerGradient => LinearGradient(
         colors: [
-          richSoil.withOpacity(0.8), // Marrón tierra 80% opacidad
-          oakWood.withOpacity(0.6), // Marrón roble 60% opacidad
+          richSoil.withValues(alpha: 0.8), // Marrón tierra 80% opacidad
+          oakWood.withValues(alpha: 0.6), // Marrón roble 60% opacidad
         ],
         begin: Alignment.topCenter, // Comienza arriba
         end: Alignment.bottomCenter, // Termina abajo
@@ -223,9 +223,9 @@ class AppGradients {
   /// Gradiente floral para elementos decorativos
   static Gradient get floralTheme => LinearGradient(
         colors: [
-          berryPink.withOpacity(0.8), // Rosa frutilla 80% opacidad
-          goldenSun.withOpacity(0.6), // Amarillo sol 60% opacidad
-          freshMint.withOpacity(0.4), // Verde menta 40% opacidad
+          berryPink.withValues(alpha: 0.8), // Rosa frutilla 80% opacidad
+          goldenSun.withValues(alpha: 0.6), // Amarillo sol 60% opacidad
+          freshMint.withValues(alpha: 0.4), // Verde menta 40% opacidad
         ],
         begin: Alignment.topLeft, // Comienza en esquina superior izquierda
         end: Alignment.bottomRight, // Termina en esquina inferior derecha
@@ -252,13 +252,13 @@ class AppGradients {
   /// Sombra suave para cards
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: forestDepth.withOpacity(0.15), // Color con 15% opacidad
+          color: forestDepth.withValues(alpha: 0.15), // Color con 15% opacidad
           blurRadius: 8, // Radio de desenfoque en píxeles
           spreadRadius: 1, // Cuánto se expande la sombra
           offset: const Offset(0, 2), // Desplazamiento (x, y)
         ),
         BoxShadow(
-          color: forestDepth.withOpacity(0.08), // Sombra más sutil
+          color: forestDepth.withValues(alpha: 0.08), // Sombra más sutil
           blurRadius: 4, // Menor desenfoque
           spreadRadius: 0.5, // Menor expansión
           offset: const Offset(0, 1), // Menor desplazamiento vertical
@@ -268,7 +268,7 @@ class AppGradients {
   /// Sombra para botones
   static List<BoxShadow> get buttonShadow => [
         BoxShadow(
-          color: emeraldLeaf.withOpacity(0.3), // Verde con 30% opacidad
+          color: emeraldLeaf.withValues(alpha: 0.3), // Verde con 30% opacidad
           blurRadius: 6, // Desenfoque medio
           spreadRadius: 1, // Expansión estándar
           offset: const Offset(0, 2), // Desplazamiento hacia abajo
@@ -278,7 +278,7 @@ class AppGradients {
   /// Sombra para elementos elevados
   static List<BoxShadow> get elevatedShadow => [
         BoxShadow(
-          color: forestDepth.withOpacity(0.2), // Verde con 20% opacidad
+          color: forestDepth.withValues(alpha: 0.2), // Verde con 20% opacidad
           blurRadius: 12, // Gran desenfoque
           spreadRadius: 2, // Expansión considerable
           offset: const Offset(0, 4), // Mayor desplazamiento
@@ -288,7 +288,7 @@ class AppGradients {
   /// Sombra sutil para elementos internos
   static List<BoxShadow> get innerShadow => [
         BoxShadow(
-          color: forestDepth.withOpacity(0.1), // Verde con 10% opacidad
+          color: forestDepth.withValues(alpha: 0.1), // Verde con 10% opacidad
           blurRadius: 4, // Desenfoque pequeño
           spreadRadius: -1, // Negativo para efecto interno
           offset: const Offset(0, 2), // Desplazamiento
@@ -298,7 +298,7 @@ class AppGradients {
   /// Sombra para elementos acuáticos
   static List<BoxShadow> get waterShadow => [
         BoxShadow(
-          color: deepSky.withOpacity(0.2), // Azul con 20% opacidad
+          color: deepSky.withValues(alpha: 0.2), // Azul con 20% opacidad
           blurRadius: 8, // Desenfoque medio
           spreadRadius: 1, // Expansión estándar
           offset: const Offset(0, 2), // Desplazamiento vertical
@@ -401,7 +401,7 @@ class AppGradients {
   /// Mezcla dos colores con opacidad
   static Color blendColors(Color color1, Color color2, double ratio) {
     return Color.alphaBlend(
-      color2.withOpacity(ratio), // Segundo color con opacidad específica
+      color2.withValues(alpha: ratio), // Segundo color con opacidad específica
       color1, // Primer color base
     );
   }

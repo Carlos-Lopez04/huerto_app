@@ -232,7 +232,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           horizontal: 16, vertical: 12), // Espaciado interno
       decoration: BoxDecoration(
         color: verdeGelido, // Color de fondo verde claro
-        border: Border.all(color: emeraldLeaf.withOpacity(0.2)), // Borde sutil
+        border: Border.all(color: emeraldLeaf.withValues(alpha: 0.2)), // Borde sutil
         borderRadius: BorderRadius.circular(12), // Bordes redondeados
         boxShadow: AppGradients.innerShadow, // Sombra interna
       ),
@@ -285,9 +285,9 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           width: 36, // Ancho fijo
           height: 36, // Alto fijo
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1), // Fondo con opacidad
+            color: color.withValues(alpha: 0.1), // Fondo con opacidad
             shape: BoxShape.circle, // Forma circular
-            border: Border.all(color: color.withOpacity(0.3)), // Borde sutil
+            border: Border.all(color: color.withValues(alpha: 0.3)), // Borde sutil
           ),
           child: Icon(icon, size: 18, color: color), // Icono centrado
         ),
@@ -330,11 +330,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           padding: const EdgeInsets.all(12), // Espaciado interno
           decoration: BoxDecoration(
             color: AchievementUtils.getCategoryColor(category)
-                .withOpacity(0.1), // Fondo semitransparente
+                .withValues(alpha: 0.1), // Fondo semitransparente
             borderRadius: BorderRadius.circular(12), // Bordes redondeados
             border: Border.all(
               color: AchievementUtils.getCategoryColor(category)
-                  .withOpacity(0.3), // Borde
+                  .withValues(alpha: 0.3), // Borde
             ),
           ),
           child: Row(
@@ -509,7 +509,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                 color: verdeGelido, // Fondo verde claro
                 borderRadius: BorderRadius.circular(8), // Bordes redondeados
                 border:
-                    Border.all(color: emeraldLeaf.withOpacity(0.3)), // Borde
+                    Border.all(color: emeraldLeaf.withValues(alpha: 0.3)), // Borde
               ),
               child: Column(
                 children: [
@@ -553,11 +553,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                 child: Container(
                   padding: const EdgeInsets.all(12), // Espaciado interno
                   decoration: BoxDecoration(
-                    color: freshMint.withOpacity(0.1), // Fondo verde claro
+                    color: freshMint.withValues(alpha: 0.1), // Fondo verde claro
                     borderRadius:
                         BorderRadius.circular(8), // Bordes redondeados
                     border:
-                        Border.all(color: freshMint.withOpacity(0.3)), // Borde
+                        Border.all(color: freshMint.withValues(alpha: 0.3)), // Borde
                   ),
                   child: Row(
                     children: [

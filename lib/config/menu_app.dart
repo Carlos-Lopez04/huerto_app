@@ -9,6 +9,7 @@ import 'package:huerto_app/screens/activity_tracking_screen.dart'; // Importar p
 import 'package:huerto_app/models/user_model.dart'; // Importar modelo de usuario
 import 'package:huerto_app/config/widgets/avatar_widget.dart'; // Importar widget de avatar
 import 'package:huerto_app/services/user_service.dart'; // Importar servicio de usuario para estadísticas
+import 'package:huerto_app/services/auth_service.dart'; // Importar servicio de autenticación
 import 'package:huerto_app/screens/camera/camera_screen.dart'; // Importar pantalla de cámara
 import 'package:huerto_app/screens/camera/qr_scanner_screen.dart'; // Importar pantalla de escáner QR
 // IMPORTAR PANTALLA DE PRUEBA QR
@@ -447,7 +448,7 @@ class MenuApp {
                           border: Border.all(color: emeraldLeaf),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -479,7 +480,7 @@ class MenuApp {
                         Text(
                           user.email,
                           style: AppFont.bodySmall.copyWith(
-                            color: cloudWhite.withOpacity(0.9),
+                            color: cloudWhite.withValues(alpha: 0.9),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -491,10 +492,10 @@ class MenuApp {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: cloudWhite.withOpacity(0.2),
+                                color: cloudWhite.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: cloudWhite.withOpacity(0.3),
+                                  color: cloudWhite.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Row(
@@ -522,10 +523,10 @@ class MenuApp {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: cloudWhite.withOpacity(0.2),
+                                color: cloudWhite.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: cloudWhite.withOpacity(0.3),
+                                  color: cloudWhite.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Row(
@@ -559,10 +560,10 @@ class MenuApp {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: goldenSun.withOpacity(0.3),
+                                color: goldenSun.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: goldenSun.withOpacity(0.5),
+                                  color: goldenSun.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Row(
@@ -586,10 +587,10 @@ class MenuApp {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: freshMint.withOpacity(0.3),
+                                color: freshMint.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: freshMint.withOpacity(0.5),
+                                  color: freshMint.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Row(
@@ -620,7 +621,7 @@ class MenuApp {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: cloudWhite.withOpacity(0.1),
+                  color: cloudWhite.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -632,7 +633,7 @@ class MenuApp {
                     Text(
                       'Toca para ver perfil completo',
                       style: AppFont.bodySmall.copyWith(
-                        color: cloudWhite.withOpacity(0.9),
+                        color: cloudWhite.withValues(alpha: 0.9),
                         fontSize: 10,
                       ),
                     ),
@@ -687,7 +688,7 @@ class MenuApp {
           borderRadius: BorderRadius.circular(10),
         ),
         tileColor: Colors.transparent,
-        hoverColor: emeraldLeaf.withOpacity(0.1),
+        hoverColor: emeraldLeaf.withValues(alpha: 0.1),
       ),
     );
   }
@@ -771,10 +772,12 @@ class MenuApp {
                       const Icon(Icons.star,
                           color: Colors.white),
                       const SizedBox(width: 8),
-                      Text(
-                        '¡Actividad registrada! +10 puntos',
-                        style: AppFont.bodyMedium
-                            .copyWith(color: Colors.white),
+                      Expanded(
+                        child: Text(
+                          '¡Actividad registrada! +10 puntos',
+                          style: AppFont.bodyMedium
+                              .copyWith(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -870,7 +873,7 @@ class MenuApp {
                 size: 60,
                 showBorder: true,
                 borderColor:
-                    tomatoRed.withOpacity(0.3),
+                    tomatoRed.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
@@ -969,8 +972,13 @@ class MenuApp {
   /*
     Método para realizar el logout
   */
-  static void _performLogout(BuildContext context) {
+  static Future<void> _performLogout(BuildContext context) async {
     final user = currentUser;
+
+    // Cerrar la sesion real (Firebase + preferencias locales).
+    await AuthService().logout();
+
+    if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -980,10 +988,12 @@ class MenuApp {
             const Icon(Icons.check_circle,
                 color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Text(
-              'Sesión cerrada - ¡Hasta pronto, ${user.name}!',
-              style: AppFont.bodyMedium
-                  .copyWith(color: Colors.white),
+            Expanded(
+              child: Text(
+                'Sesión cerrada - ¡Hasta pronto, ${user.name}!',
+                style: AppFont.bodyMedium
+                    .copyWith(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -1003,8 +1013,9 @@ class MenuApp {
       ),
     );
 
-    Navigator.popUntil(
-        context, (route) => route.isFirst);
+    // Volver a la pantalla de inicio de sesion, limpiando la pila.
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/login', (route) => false);
   }
 
   /*
@@ -1067,7 +1078,7 @@ class MenuApp {
                       value:
                           user.levelProgress,
                       backgroundColor:
-                          Colors.white.withOpacity(0.3),
+                          Colors.white.withValues(alpha: 0.3),
                       color: Colors.white,
                       minHeight: 10,
                       borderRadius:
@@ -1192,16 +1203,16 @@ class MenuApp {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 16, color: color),

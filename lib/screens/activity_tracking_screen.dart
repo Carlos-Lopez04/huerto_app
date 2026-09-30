@@ -62,10 +62,12 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
             const Icon(Icons.star,
                 color: Colors.white, size: 20), // Icono estrella
             const SizedBox(width: 8), // Espaciado
-            Text(
-              '+${activity?.points ?? 0} puntos ganados!', // Mensaje con puntos
-              style: AppFont.bodyMedium
-                  .copyWith(color: Colors.white), // Estilo blanco
+            Expanded(
+              child: Text(
+                '+${activity?.points ?? 0} puntos ganados!', // Mensaje con puntos
+                style: AppFont.bodyMedium
+                    .copyWith(color: Colors.white), // Estilo blanco
+              ),
             ),
           ],
         ),
@@ -78,6 +80,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
       // Si hay logros nuevos
       Future.delayed(const Duration(milliseconds: 500), () {
         // Retraso para mostrar después
+        if (!mounted) return;
         for (final achievement in newAchievements) {
           // Iterar sobre cada logro
           ScaffoldMessenger.of(context).showSnackBar(
@@ -107,8 +110,6 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activities =
-        ActivityService.getAvailableActivities(); // Todas las actividades
     final categorizedActivities =
         ActivityService.getActivitiesByCategory(); // Agrupadas
     final stats =
@@ -167,7 +168,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
         borderRadius: BorderRadius.circular(16), // Bordes muy redondeados
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1), // Sombra sutil
+            color: Colors.black.withValues(alpha: 0.1), // Sombra sutil
             blurRadius: 8, // Desenfoque
             offset: const Offset(0, 4), // Desplazamiento hacia abajo
           ),
@@ -317,8 +318,8 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
             borderRadius: BorderRadius.circular(12), // Bordes redondeados
             gradient: LinearGradient(
               colors: [
-                color.withOpacity(0.1), // Color claro
-                color.withOpacity(0.05), // Color más claro
+                color.withValues(alpha: 0.1), // Color claro
+                color.withValues(alpha: 0.05), // Color más claro
               ],
               begin: Alignment.topLeft, // Inicio esquina superior izquierda
               end: Alignment.bottomRight, // Fin esquina inferior derecha
@@ -336,7 +337,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
                   Container(
                     padding: const EdgeInsets.all(6), // Espaciado del icono
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2), // Fondo semitransparente
+                      color: color.withValues(alpha: 0.2), // Fondo semitransparente
                       shape: BoxShape.circle, // Forma circular
                     ),
                     child: Text(
@@ -379,7 +380,7 @@ class _ActivityTrackingScreenState extends State<ActivityTrackingScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2), // Espaciado
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2), // Fondo semitransparente
+                      color: color.withValues(alpha: 0.2), // Fondo semitransparente
                       borderRadius:
                           BorderRadius.circular(10), // Bordes redondeados
                     ),

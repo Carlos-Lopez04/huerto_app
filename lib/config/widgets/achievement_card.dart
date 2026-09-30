@@ -72,13 +72,13 @@ class AchievementCard extends StatelessWidget {
                     width: 40, // Ancho fijo
                     height: 40, // Alto fijo
                     decoration: BoxDecoration(
-                      color: color.withOpacity(isUnlocked
+                      color: color.withValues(alpha: isUnlocked
                           ? 0.2
                           : 0.1), // Color con opacidad según estado
                       borderRadius: BorderRadius.circular(20), // Forma circular
                       border: Border.all(
                         // Borde
-                        color: color.withOpacity(isUnlocked
+                        color: color.withValues(alpha: isUnlocked
                             ? 0.5
                             : 0.3), // Color del borde según estado
                       ),
@@ -206,11 +206,11 @@ class AchievementCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4), // Relleno interno
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1), // Color con opacidad baja
+                      color: color.withValues(alpha: 0.1), // Color con opacidad baja
                       borderRadius:
                           BorderRadius.circular(8), // Bordes redondeados
                       border: Border.all(
-                          color: color.withOpacity(0.3)), // Borde sutil
+                          color: color.withValues(alpha: 0.3)), // Borde sutil
                     ),
                     child: Row(
                       children: [
@@ -235,13 +235,13 @@ class AchievementCard extends StatelessWidget {
                         horizontal: 8, vertical: 4), // Relleno interno
                     decoration: BoxDecoration(
                       color: _getLevelColor(achievement.level)
-                          .withOpacity(0.1), // Color según nivel
+                          .withValues(alpha: 0.1), // Color según nivel
                       borderRadius:
                           BorderRadius.circular(8), // Bordes redondeados
                       border: Border.all(
                         // Borde
                         color: _getLevelColor(achievement.level)
-                            .withOpacity(0.3), // Color del borde
+                            .withValues(alpha: 0.3), // Color del borde
                       ),
                     ),
                     child: Text(

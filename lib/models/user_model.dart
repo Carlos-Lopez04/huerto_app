@@ -48,6 +48,9 @@ class UserModel {
   final String
       avatarStyle; // Estilo del avatar: 'simple', 'detailed', o 'custom'
 
+  // Indica si el usuario tiene rol de administrador
+  final bool isAdmin;
+
   // Colores por defecto para comparación
   static const Color defaultSkinColor =
       Color(0xFFF7D7B2); // Color de piel por defecto
@@ -90,6 +93,7 @@ class UserModel {
     this.accessory, // Opcional: accesorio
     this.avatarStyle =
         'simple', // Opcional: estilo de avatar ('simple' por defecto)
+    this.isAdmin = false, // Opcional: rol de administrador (false por defecto)
   });
 
   /*
@@ -187,17 +191,20 @@ class UserModel {
   /*
     Obtiene color de overlay para piel (con opacidad aplicada)
   */
-  Color get skinOverlayColor => skinColor.withOpacity(skinColorOpacity);
+  Color get skinOverlayColor =>
+      skinColor.withValues(alpha: skinColorOpacity);
 
   /*
     Obtiene color de overlay para cabello (con opacidad aplicada)
   */
-  Color get hairOverlayColor => hairColor.withOpacity(hairColorOpacity);
+  Color get hairOverlayColor =>
+      hairColor.withValues(alpha: hairColorOpacity);
 
   /*
     Obtiene color de overlay para ojos (con opacidad aplicada)
   */
-  Color get eyeOverlayColor => eyeColor.withOpacity(eyeColorOpacity);
+  Color get eyeOverlayColor =>
+      eyeColor.withValues(alpha: eyeColorOpacity);
 
   /*
     Determina el rango del usuario basado en su nivel
@@ -293,11 +300,11 @@ class UserModel {
         'hasCustomHairColor': hasCustomHairColor, // Si cabello es personalizado
         'hasCustomEyeColor': hasCustomEyeColor, // Si ojos son personalizados
         'skinOverlayColor':
-            skinOverlayColor.value, // Valor hex de overlay de piel
+            skinOverlayColor.toARGB32(), // Valor hex de overlay de piel
         'hairOverlayColor':
-            hairOverlayColor.value, // Valor hex de overlay de cabello
+            hairOverlayColor.toARGB32(), // Valor hex de overlay de cabello
         'eyeOverlayColor':
-            eyeOverlayColor.value, // Valor hex de overlay de ojos
+            eyeOverlayColor.toARGB32(), // Valor hex de overlay de ojos
         'skinOpacity': skinColorOpacity, // Opacidad de piel
         'hairOpacity': hairColorOpacity, // Opacidad de cabello
         'eyeOpacity': eyeColorOpacity, // Opacidad de ojos
@@ -411,6 +418,7 @@ class UserModel {
       accessory: json['accessory'], // Accesorio (puede ser null)
       avatarStyle:
           json['avatarStyle'] ?? 'simple', // Estilo de avatar o 'simple'
+      isAdmin: json['isAdmin'] ?? false, // Rol de administrador o false
     );
   }
 
@@ -444,6 +452,7 @@ class UserModel {
       'hasGlasses': hasGlasses,
       'accessory': accessory,
       'avatarStyle': avatarStyle,
+      'isAdmin': isAdmin,
     };
   }
 
@@ -474,6 +483,7 @@ class UserModel {
     bool? hasGlasses,
     String? accessory,
     String? avatarStyle,
+    bool? isAdmin,
   }) {
     return UserModel(
       id: id ?? this.id, // Usa nuevo valor o el actual
@@ -501,6 +511,7 @@ class UserModel {
       hasGlasses: hasGlasses ?? this.hasGlasses,
       accessory: accessory ?? this.accessory,
       avatarStyle: avatarStyle ?? this.avatarStyle,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -558,14 +569,14 @@ class UserModel {
       }
       return defaultSkinColor; // Valor por defecto si hay error
     } catch (e) {
-      print('Error parsing color $colorString: $e'); // Log de error
+      debugPrint('Error parsing color $colorString: $e'); // Log de error
       return defaultSkinColor; // Valor por defecto
     }
   }
 
   // Convierte Color a string hexadecimal
   static String _getColorString(Color color) {
-    return '0x${color.value.toRadixString(16).padLeft(8, '0')}'; // Valor hex con padding de 8 caracteres
+    return '0x${color.toARGB32().toRadixString(16).padLeft(8, '0')}'; // Valor hex con padding de 8 caracteres
   }
 
   /*
@@ -750,17 +761,17 @@ class UserModel {
     return {
       'isCustomized': isAvatarCustomized, // Si está personalizado
       'skin': {
-        'color': skinColor.value, // Valor hex del color
+        'color': skinColor.toARGB32(), // Valor hex del color
         'isCustom': hasCustomSkinColor, // Si es personalizado
         'name': _getColorName(skinColor), // Nombre del color
       },
       'hair': {
-        'color': hairColor.value, // Valor hex del color
+        'color': hairColor.toARGB32(), // Valor hex del color
         'isCustom': hasCustomHairColor, // Si es personalizado
         'name': _getColorName(hairColor), // Nombre del color
       },
       'eyes': {
-        'color': eyeColor.value, // Valor hex del color
+        'color': eyeColor.toARGB32(), // Valor hex del color
         'isCustom': hasCustomEyeColor, // Si es personalizado
         'name': _getColorName(eyeColor), // Nombre del color
       },

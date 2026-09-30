@@ -118,7 +118,7 @@ class AchievementCheckerService {
     // Obtener lista de logros de muestra
     final sampleAchievements = AchievementUtils.getSampleAchievements();
     // Buscar el logro específico por ID
-    final achievement = sampleAchievements.firstWhere(
+    sampleAchievements.firstWhere(
       (a) => a.id == achievementId, // Condición de búsqueda
       orElse: () =>
           sampleAchievements.first, // Valor por defecto si no encuentra

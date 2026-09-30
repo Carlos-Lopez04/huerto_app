@@ -92,7 +92,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   
   Future<void> _takePicture() async {
     final photo = await _cameraService.takePicture();
-    
+
     if (photo != null && mounted) {
       // Navegar a vista previa
       final confirmed = await Navigator.push(
@@ -105,21 +105,22 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           ),
         ),
       );
-      
-      if (confirmed == true) {
+
+      if (confirmed == true && mounted) {
         widget.onPhotoCaptured(photo);
         Navigator.pop(context, photo);
       }
     }
   }
-  
+
   Future<void> _startVideoRecording() async {
     try {
       await _cameraService.startVideoRecording();
+      if (!mounted) return;
       setState(() {
         _isRecording = true;
       });
-      
+
       // Mostrar snackbar indicando grabación
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -128,6 +129,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al grabar: $e'),
