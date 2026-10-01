@@ -16,6 +16,9 @@ import 'package:huerto_app/screens/camera/qr_scanner_screen.dart'; // Importar p
 import 'dart:io'; // Importar para manejar archivos
 import 'package:huerto_app/screens/plants_info_screen.dart'; // Importar pantalla de información de plantas
 import 'package:huerto_app/screens/camera/test_qr_with_image.dart';
+import 'package:huerto_app/screens/plant_collection_screen.dart'; // Importar pantalla del herbario
+import 'package:huerto_app/screens/store_screen.dart'; // Importar pantalla de tienda
+import 'package:huerto_app/screens/missions_screen.dart'; // Importar pantalla de misiones
 
 /*
     Clase principal para manejar el menú de navegación de la aplicación
@@ -76,7 +79,12 @@ class MenuApp {
             onTap: () {
               // Acción al tocar
               Navigator.pop(context); // Cierra el drawer
-              _showComingSoon(context); // Muestra diálogo de "próximamente"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PlantCollectionScreen(),
+                ),
+              );
             },
           ),
           _buildDrawerItem(
@@ -165,11 +173,16 @@ class MenuApp {
           _buildDrawerItem(
             // Item del menú: Actividades Diarias
             icon: Icons.checklist, // Icono de lista de chequeo
-            title: 'Actividades Diarias', // Título del item
+            title: 'Misiones', // Título del item
             onTap: () {
               // Acción al tocar
               Navigator.pop(context); // Cierra el drawer
-              _showComingSoon(context); // Muestra diálogo de "próximamente"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MissionsScreen(),
+                ),
+              );
             },
           ),
           _buildDrawerItem(
@@ -179,7 +192,12 @@ class MenuApp {
             onTap: () {
               // Acción al tocar
               Navigator.pop(context); // Cierra el drawer
-              _showComingSoon(context); // Muestra diálogo de "próximamente"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StoreScreen(),
+                ),
+              );
             },
           ),
           _buildDrawerItem(
@@ -610,6 +628,25 @@ class MenuApp {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: user.levelProgress.clamp(0.0, 1.0),
+                            minHeight: 6,
+                            backgroundColor:
+                                cloudWhite.withValues(alpha: 0.25),
+                            color: goldenSun,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${user.pointsToNextLevel} pts para el nivel ${user.level + 1}',
+                          style: AppFont.bodySmall.copyWith(
+                            color: cloudWhite.withValues(alpha: 0.9),
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),

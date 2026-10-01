@@ -1,10 +1,12 @@
 // services/user_service.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:huerto_app/models/user_model.dart';
 import 'package:huerto_app/models/activity_model.dart' hide UserGender;
+import 'package:huerto_app/services/firestore_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,15 +61,29 @@ class UserService {
     }
   }
 
+  // Notificador de subida de nivel (nuevo nivel, o null).
+  final ValueNotifier<int?> levelUpNotifier = ValueNotifier<int?>(null);
+
   /*
     MÉTODO PRINCIPAL PARA ACTUALIZAR USUARIO
   */
 
   // Actualizar usuario y notificar a todos los listeners
   void updateUser(UserModel newUser) {
+    final previousLevel = _currentUser.level;
     _currentUser = newUser; // Actualizar usuario
     _notifyListeners(); // Notificar listeners
-    _saveUserToPrefs(newUser); // Persistir en almacenamiento
+    _saveUserToPrefs(newUser); // Persistir en almacenamiento local
+    _syncToFirestore(newUser); // Sincronizar en la nube
+
+    if (newUser.level > previousLevel) {
+      levelUpNotifier.value = newUser.level; // Disparar celebración de nivel
+    }
+  }
+
+  // Guarda el perfil en Firestore (fire-and-forget, no bloquea la UI).
+  void _syncToFirestore(UserModel user) {
+    unawaited(FirestoreService.instance.saveUser(user));
   }
 
   /*
@@ -151,18 +167,35 @@ class UserService {
   // Completar una actividad y otorgar puntos
   Future<void> completeActivity(String activityId, int points) async {
     try {
-      // Agregar puntos y marcar como completada
-      final userWithPoints = _currentUser.addPoints(points);
-      final updatedUser = userWithPoints.completeActivity(activityId);
+      // Agregar puntos, monedas y marcar como completada
+      final userWithPoints =
+          _currentUser.addPoints(points).addCoins(10).completeActivity(activityId);
 
       // Actualizar usuario
-      updateUser(updatedUser);
+      updateUser(userWithPoints);
 
       // Guardar actividad completada en historial
       await _saveCompletedActivity(activityId, points);
     } catch (e) {
       debugPrint('Error al completar actividad: $e'); // Manejar error
     }
+  }
+
+  // Sumar puntos sin registrar una actividad (p. ej. descubrimientos AR)
+  Future<void> addPoints(int points) async {
+    updateUser(_currentUser.addPoints(points));
+  }
+
+  // Sumar monedas (eco-money)
+  Future<void> addCoins(int amount) async {
+    updateUser(_currentUser.addCoins(amount));
+  }
+
+  // Gastar monedas (eco-money). Devuelve true si se pudo gastar.
+  Future<bool> spendCoins(int amount) async {
+    if (_currentUser.ecoCoins < amount) return false;
+    updateUser(_currentUser.spendCoins(amount));
+    return true;
   }
 
   // Alternar actividad como favorita

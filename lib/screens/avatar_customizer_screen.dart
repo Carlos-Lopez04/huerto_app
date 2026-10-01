@@ -188,6 +188,78 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
     },
   ];
 
+  /*
+      OPCIONES DE CORTE DE PELO
+  */
+  final List<Map<String, dynamic>> _hairStyles = [
+    {
+      'name': 'Corto',
+      'style': 'corto',
+      'icon': Icons.face_retouching_natural,
+      'description': 'Cabello corto',
+      'default': true,
+    },
+    {
+      'name': 'Largo',
+      'style': 'largo',
+      'icon': Icons.waves,
+      'description': 'Cabello largo',
+      'default': false,
+    },
+    {
+      'name': 'Rizado',
+      'style': 'rizado',
+      'icon': Icons.grain,
+      'description': 'Cabello rizado',
+      'default': false,
+    },
+    {
+      'name': 'Afro',
+      'style': 'afro',
+      'icon': Icons.blur_circular,
+      'description': 'Cabello afro',
+      'default': false,
+    },
+  ];
+
+  /*
+      OPCIONES DE VESTIMENTA
+  */
+  final List<Map<String, dynamic>> _outfits = [
+    {
+      'name': 'Sin vestimenta',
+      'outfit': '',
+      'color': Colors.transparent,
+      'icon': Icons.block,
+      'description': 'Sin vestimenta',
+      'default': true,
+    },
+    {
+      'name': 'Overol',
+      'outfit': 'overol',
+      'color': const Color(0xFF4E6E3B),
+      'icon': Icons.agriculture,
+      'description': 'Overol de jardinero',
+      'default': false,
+    },
+    {
+      'name': 'Camiseta',
+      'outfit': 'camiseta',
+      'color': const Color(0xFF2E7D32),
+      'icon': Icons.checkroom,
+      'description': 'Camiseta verde',
+      'default': false,
+    },
+    {
+      'name': 'Formal',
+      'outfit': 'formal',
+      'color': const Color(0xFF42A5F5),
+      'icon': Icons.business_center,
+      'description': 'Camisa formal',
+      'default': false,
+    },
+  ];
+
   @override
   void initState() {
     super.initState(); // Llamar al initState del padre
@@ -251,8 +323,13 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
             _buildGenderSelector(), // Widget selector de género
             const SizedBox(height: 20), // Espaciador vertical
 
+            // Selector de corte de pelo
+            _buildSectionTitle('2. Elige tu corte de pelo'), // Título de sección
+            _buildHairStyleSelector(), // Widget selector de corte de pelo
+            const SizedBox(height: 20), // Espaciador vertical
+
             // Selector de tono de piel
-            _buildSectionTitle('2. Elige tu tono de piel'), // Título de sección
+            _buildSectionTitle('3. Elige tu tono de piel'), // Título de sección
             _buildColorSelector(
               title: 'Tono de Piel', // Título del selector
               colors: _skinTones, // Lista de colores disponibles
@@ -270,7 +347,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
 
             // Selector de color de cabello
             _buildSectionTitle(
-                '3. Elige color de cabello'), // Título de sección
+                '4. Elige color de cabello'), // Título de sección
             _buildColorSelector(
               title: 'Color de Cabello', // Título del selector
               colors: _hairColors, // Lista de colores disponibles
@@ -287,7 +364,7 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
             const SizedBox(height: 20), // Espaciador vertical
 
             // Selector de color de ojos
-            _buildSectionTitle('4. Elige color de ojos'), // Título de sección
+            _buildSectionTitle('5. Elige color de ojos'), // Título de sección
             _buildColorSelector(
               title: 'Color de Ojos', // Título del selector
               colors: _eyeColors, // Lista de colores disponibles
@@ -304,8 +381,13 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
             const SizedBox(height: 20), // Espaciador vertical
 
             // Selector de lentes
-            _buildSectionTitle('5. ¿Usas lentes?'), // Título de sección
+            _buildSectionTitle('6. ¿Usas lentes?'), // Título de sección
             _buildGlassesSelector(), // Widget selector de lentes
+            const SizedBox(height: 20), // Espaciador vertical
+
+            // Selector de vestimenta
+            _buildSectionTitle('7. Elige tu vestimenta'), // Título de sección
+            _buildOutfitSelector(), // Widget selector de vestimenta
             const SizedBox(height: 30), // Espaciador vertical
 
             // Botones de acción
@@ -453,6 +535,18 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
                       'Color de ojos', // Detalle de color de ojos
                       _getColorName(_currentUser.eyeColor,
                           _eyeColors)), // Obtener nombre del color
+
+                if (_currentUser.hasCustomHairStyle)
+                  _buildAvatarDetail(
+                      'Corte de pelo',
+                      _getHairStyleName(
+                          _currentUser.hairStyle)), // Detalle de corte
+
+                if (_currentUser.hasCustomOutfit)
+                  _buildAvatarDetail(
+                      'Vestimenta',
+                      _getOutfitName(
+                          _currentUser.outfit)), // Detalle de vestimenta
 
                 if (_currentUser.hasGlasses)
                   _buildAvatarDetail('Lentes', 'Sí'), // Detalle de lentes
@@ -980,6 +1074,209 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
   }
 
   /*
+      CONSTRUIR SELECTOR DE CORTE DE PELO
+  */
+  Widget _buildHairStyleSelector() {
+    return _buildChoiceGroup(
+      title: 'Corte de Pelo',
+      icon: Icons.content_cut,
+      options: _hairStyles,
+      keyField: 'style',
+      selectedValue: _currentUser.hairStyle,
+      onSelect: (value) {
+        setState(() {
+          _currentUser = _currentUser.copyWith(hairStyle: value as String);
+        });
+      },
+    );
+  }
+
+  /*
+      CONSTRUIR SELECTOR DE VESTIMENTA
+  */
+  Widget _buildOutfitSelector() {
+    return _buildChoiceGroup(
+      title: 'Vestimenta',
+      icon: Icons.checkroom,
+      options: _outfits,
+      keyField: 'outfit',
+      selectedValue: _currentUser.outfit,
+      onSelect: (value) {
+        setState(() {
+          _currentUser = _currentUser.copyWith(outfit: value as String);
+        });
+      },
+    );
+  }
+
+  /*
+      GRUPO GENÉRICO DE OPCIONES (corte de pelo / vestimenta)
+  */
+  Widget _buildChoiceGroup({
+    required String title,
+    required IconData icon,
+    required List<Map<String, dynamic>> options,
+    required String keyField,
+    required dynamic selectedValue,
+    required Function(dynamic) onSelect,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF1B5E20), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1B5E20),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: options.map((option) {
+              final name = option['name'] as String;
+              final description = option['description'] as String;
+              final iconData = option['icon'] as IconData;
+              final color = option['color'] as Color? ?? Colors.grey;
+              final isDefault = option['default'] as bool;
+              final value = option[keyField];
+              final isSelected = value == selectedValue;
+
+              return _buildChoiceOption(
+                name: name,
+                description: description,
+                icon: iconData,
+                color: color,
+                isDefault: isDefault,
+                isSelected: isSelected,
+                onTap: () => onSelect(value),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /*
+      OPCIÓN INDIVIDUAL DE ELECCIÓN
+  */
+  Widget _buildChoiceOption({
+    required String name,
+    required String description,
+    required IconData icon,
+    required Color color,
+    required bool isDefault,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 110,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.grey[300]!,
+            width: isSelected ? 3 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color == Colors.transparent
+                    ? Colors.grey[100]
+                    : color.withValues(alpha: 0.25),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: color == Colors.transparent
+                      ? Colors.grey[300]!
+                      : color,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isSelected
+                    ? const Color(0xFF4CAF50)
+                    : (color == Colors.transparent ? Colors.grey : color),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected
+                    ? const Color(0xFF4CAF50)
+                    : Colors.grey[800],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isDefault)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Por defecto',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF4CAF50),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /*
       CONSTRUIR BOTONES DE ACCIÓN
   */
   Widget _buildActionButtons() {
@@ -1073,12 +1370,16 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
         UserModel.defaultEyeColor; // Verificar ojos personalizados
     final hasCustomGlass = _currentUser.hasGlasses !=
         UserModel.defaultHasGlasses; // Verificar lentes personalizados
+    final hasCustomHairStyle = _currentUser.hairStyle != 'corto';
+    final hasCustomOutfit = _currentUser.outfit.isNotEmpty;
 
     // Verificar si hay alguna personalización
     final hasAnyCustomization = hasCustomSkin ||
         hasCustomHair ||
         hasCustomEye ||
-        hasCustomGlass; // Verificar cualquier personalización
+        hasCustomGlass ||
+        hasCustomHairStyle ||
+        hasCustomOutfit; // Verificar cualquier personalización
 
     // Crear usuario actualizado
     final updatedUser = _currentUser.copyWith(
@@ -1137,10 +1438,29 @@ class _AvatarCustomizerScreenState extends State<AvatarCustomizerScreen> {
   }
 
   /*
+      MÉTODO AUXILIAR: OBTENER NOMBRE DEL CORTE DE PELO
+  */
+  String _getHairStyleName(String style) {
+    return _hairStyles.firstWhere(
+      (s) => s['style'] == style,
+      orElse: () => {'name': 'Corto'},
+    )['name'] as String;
+  }
+
+  /*
+      MÉTODO AUXILIAR: OBTENER NOMBRE DE LA VESTIMENTA
+  */
+  String _getOutfitName(String outfit) {
+    return _outfits.firstWhere(
+      (o) => o['outfit'] == outfit,
+      orElse: () => {'name': 'Sin vestimenta'},
+    )['name'] as String;
+  }
+
+  /*
       MÉTODO AUXILIAR: OBTENER NOMBRE DE COLOR
   */
-  String _getColorName(Color color, List<Map<String, dynamic>> colorList) {
-    final colorData = colorList.firstWhere(
+  String _getColorName(Color color, List<Map<String, dynamic>> colorList) {    final colorData = colorList.firstWhere(
       // Buscar color en la lista
       (item) =>
           (item['color'] as Color).toARGB32() ==

@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:huerto_app/screens/home_screen.dart';
 import 'package:huerto_app/screens/login_screen.dart';
 import 'package:huerto_app/services/firebase_startup_service.dart';
+import 'package:huerto_app/services/user_service.dart';
 import 'package:huerto_app/themes/app_font.dart';
 import 'package:huerto_app/themes/app_theme.dart';
 
@@ -32,6 +33,9 @@ Future<void> _initializeApp() async {
       'Firebase no pudo inicializarse. Error inesperado: $e',
     );
   }
+
+  // Cargar el perfil local (sincronizado con Firestore) al iniciar.
+  await UserService().loadUserFromPrefs();
 }
 
 /// Comportamiento de scroll global: evita el efecto elastico/estirado

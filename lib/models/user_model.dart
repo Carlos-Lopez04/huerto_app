@@ -44,12 +44,18 @@ class UserModel {
   final Color hairColor; // Color de cabello del avatar
   final Color eyeColor; // Color de ojos del avatar
   final bool hasGlasses; // Si el avatar usa lentes
+  final String glassesStyle; // Estilo de lentes: '' (ninguno), 'redonda', 'sol', 'deportiva'
   final String? accessory; // Accesorio del avatar (opcional)
+  final String hairStyle; // Estilo de cabello: 'corto', 'largo', 'rizado', 'afro'
+  final String outfit; // Vestimenta del avatar ('' = sin vestimenta)
   final String
       avatarStyle; // Estilo del avatar: 'simple', 'detailed', o 'custom'
 
   // Indica si el usuario tiene rol de administrador
   final bool isAdmin;
+
+  // Monedas virtuales (eco-money) para canjear en la tienda
+  final int ecoCoins;
 
   // Colores por defecto para comparación
   static const Color defaultSkinColor =
@@ -90,10 +96,14 @@ class UserModel {
         defaultHairColor, // Opcional: color de cabello (por defecto)
     this.eyeColor = defaultEyeColor, // Opcional: color de ojos (por defecto)
     this.hasGlasses = defaultHasGlasses, // Opcional: lentes (false por defecto)
+    this.glassesStyle = '', // Opcional: estilo de lentes ('' = ninguno)
     this.accessory, // Opcional: accesorio
+    this.hairStyle = 'corto', // Opcional: estilo de cabello (corto por defecto)
+    this.outfit = '', // Opcional: vestimenta ('' = sin vestimenta)
     this.avatarStyle =
         'simple', // Opcional: estilo de avatar ('simple' por defecto)
     this.isAdmin = false, // Opcional: rol de administrador (false por defecto)
+    this.ecoCoins = 0, // Opcional: monedas eco-money (0 por defecto)
   });
 
   /*
@@ -165,10 +175,28 @@ class UserModel {
       hasGlasses != defaultHasGlasses; // Compara con valor por defecto
 
   /*
+    Verifica si tiene un estilo de lentes personalizado
+  */
+  bool get hasCustomGlassesStyle =>
+      glassesStyle.isNotEmpty; // True si hay estilo de lentes
+
+  /*
     Verifica si tiene accesorio
   */
   bool get hasAccessory =>
       accessory != null && accessory!.isNotEmpty; // No nulo y no vacío
+
+  /*
+    Verifica si el corte de pelo es personalizado
+  */
+  bool get hasCustomHairStyle =>
+      hairStyle != 'corto'; // True si no es el estilo corto por defecto
+
+  /*
+    Verifica si tiene vestimenta personalizada
+  */
+  bool get hasCustomOutfit =>
+      outfit.isNotEmpty; // True si hay vestimenta seleccionada
 
   /*
     Obtiene opacidad para overlay de color de piel
@@ -284,6 +312,9 @@ class UserModel {
         hasCustomHairColor || // Color de cabello personalizado
         hasCustomEyeColor || // Color de ojos personalizado
         hasCustomGlasses || // Lentes personalizados
+        hasCustomGlassesStyle || // Estilo de lentes personalizado
+        hasCustomHairStyle || // Corte de pelo personalizado
+        hasCustomOutfit || // Vestimenta personalizada
         hasAccessory || // Tiene accesorio
         usesCustomAvatar; // Usa avatar personalizado
   }
@@ -415,10 +446,14 @@ class UserModel {
       eyeColor:
           _parseColor(json['eyeColor'] ?? '0xFF2E7D32'), // Parsea color de ojos
       hasGlasses: json['hasGlasses'] ?? false, // Lentes o false
+      glassesStyle: json['glassesStyle'] ?? '', // Estilo de lentes
       accessory: json['accessory'], // Accesorio (puede ser null)
+      hairStyle: json['hairStyle'] ?? 'corto', // Estilo de cabello
+      outfit: json['outfit'] ?? '', // Vestimenta ('' = sin vestimenta)
       avatarStyle:
           json['avatarStyle'] ?? 'simple', // Estilo de avatar o 'simple'
       isAdmin: json['isAdmin'] ?? false, // Rol de administrador o false
+      ecoCoins: json['ecoCoins'] ?? 0, // Monedas eco-money o 0
     );
   }
 
@@ -450,9 +485,13 @@ class UserModel {
       'hairColor': _getColorString(hairColor), // Convierte color a string
       'eyeColor': _getColorString(eyeColor), // Convierte color a string
       'hasGlasses': hasGlasses,
+      'glassesStyle': glassesStyle,
       'accessory': accessory,
+      'hairStyle': hairStyle,
+      'outfit': outfit,
       'avatarStyle': avatarStyle,
       'isAdmin': isAdmin,
+      'ecoCoins': ecoCoins,
     };
   }
 
@@ -481,9 +520,13 @@ class UserModel {
     Color? hairColor,
     Color? eyeColor,
     bool? hasGlasses,
+    String? glassesStyle,
     String? accessory,
+    String? hairStyle,
+    String? outfit,
     String? avatarStyle,
     bool? isAdmin,
+    int? ecoCoins,
   }) {
     return UserModel(
       id: id ?? this.id, // Usa nuevo valor o el actual
@@ -509,9 +552,13 @@ class UserModel {
       hairColor: hairColor ?? this.hairColor,
       eyeColor: eyeColor ?? this.eyeColor,
       hasGlasses: hasGlasses ?? this.hasGlasses,
+      glassesStyle: glassesStyle ?? this.glassesStyle,
       accessory: accessory ?? this.accessory,
+      hairStyle: hairStyle ?? this.hairStyle,
+      outfit: outfit ?? this.outfit,
       avatarStyle: avatarStyle ?? this.avatarStyle,
       isAdmin: isAdmin ?? this.isAdmin,
+      ecoCoins: ecoCoins ?? this.ecoCoins,
     );
   }
 
@@ -592,6 +639,17 @@ class UserModel {
       totalPoints: newTotalPoints, // Actualiza puntos
       level: newLevel, // Actualiza nivel
     );
+  }
+
+  // Agrega monedas (eco-money)
+  UserModel addCoins(int amount) {
+    return copyWith(ecoCoins: ecoCoins + amount);
+  }
+
+  // Gasta monedas (eco-money); no baja de cero
+  UserModel spendCoins(int amount) {
+    final remaining = ecoCoins - amount;
+    return copyWith(ecoCoins: remaining < 0 ? 0 : remaining);
   }
 
   // Marca actividad como completada
@@ -742,7 +800,10 @@ class UserModel {
       hairColor: defaultHairColor, // Color de cabello por defecto
       eyeColor: defaultEyeColor, // Color de ojos por defecto
       hasGlasses: defaultHasGlasses, // Lentes por defecto (false)
+      glassesStyle: '', // Sin estilo de lentes
       accessory: null, // Sin accesorio
+      hairStyle: 'corto', // Corte de pelo por defecto
+      outfit: '', // Sin vestimenta
       avatarStyle: 'simple', // Estilo simple
     );
   }

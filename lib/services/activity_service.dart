@@ -158,8 +158,9 @@ class ActivityService {
     // 1. Actualizar contador de actividades del usuario
     final updatedUser = user.updateActivityCount(activityId, 1);
 
-    // 2. Agregar puntos correspondientes a la actividad
-    final userWithPoints = updatedUser.addPoints(activity.points);
+    // 2. Agregar puntos y monedas correspondientes a la actividad
+    final userWithPoints =
+        updatedUser.addPoints(activity.points).addCoins(10);
 
     // 3. Marcar actividad como completada
     final userWithActivity = userWithPoints.completeActivity(activityId);

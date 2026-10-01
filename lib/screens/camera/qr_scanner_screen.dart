@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:huerto_app/models/plant_model.dart';
+import 'package:huerto_app/services/plant_collection_service.dart';
 import 'package:huerto_app/services/plant_repository.dart';
 import 'package:huerto_app/services/qr_scanner_service.dart';
+import 'package:huerto_app/services/user_service.dart';
 import 'package:huerto_app/themes/app_theme.dart';
 import 'package:huerto_app/themes/app_font.dart';
 
@@ -33,11 +36,20 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
   // ----- Estado de realidad aumentada -----
   Size? _cameraSize; // Tamano de salida de la camara
-  String? _arCode; // Codigo de la planta detectada
-  PlantModel? _arPlant; // Informacion de la planta detectada
-  List<Offset>? _arCorners; // Esquinas del codigo en el frame de la camara
-  Size? _arFrameSize; // Tamano del frame donde vienen las esquinas
+  String? _activeSlug; // Slug de la planta activa (tarjeta AR)
+  PlantModel? _arPlant; // Informacion de la planta activa
   bool _arLoading = false; // Mientras se resuelve la informacion
+
+  // Multi-marcador: plantas detectadas a la vez en el frame.
+  Map<String, List<Offset>> _allMarkers = {};
+  Size? _allFrameSize;
+  final Map<String, PlantModel> _resolvedCache = {};
+
+  // ----- Descubrimiento y recompensas -----
+  bool _showDiscoveryBadge = false;
+  String _discoveryName = '';
+  int _discoveryPoints = 0;
+  Timer? _discoveryTimer;
 
   @override
   void initState() {
@@ -49,6 +61,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _discoveryTimer?.cancel();
     _scannerService.dispose();
     super.dispose();
   }
@@ -106,32 +119,35 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   Future<void> _handleBarcode(BarcodeCapture capture) async {
     if (capture.barcodes.isEmpty) return;
 
-    final Barcode barcode = capture.barcodes.first;
-    final String? code = barcode.rawValue;
+    final frameSize = capture.size;
+    final detections = <({String code, String slug, List<Offset> corners})>[];
+    String? nonPlantCode;
 
-    if (code == null || code.trim().isEmpty) return;
+    for (final barcode in capture.barcodes) {
+      final code = barcode.rawValue;
+      if (code == null || code.trim().isEmpty) continue;
+      final slug = PlantRepository.slugFromCode(code);
+      if (slug != null) {
+        detections.add((code: code, slug: slug, corners: barcode.corners));
+      } else {
+        nonPlantCode ??= code;
+      }
+    }
 
-    // ¿Es un codigo de planta? -> experiencia de realidad aumentada.
-    final slug = PlantRepository.slugFromCode(code);
-    if (slug != null) {
-      _handlePlantDetection(
-        code,
-        slug,
-        barcode.corners,
-        capture.size,
-      );
+    // Marcar todas las plantas detectadas (acotado y con throttle).
+    _updateAllMarkers(detections, frameSize);
+
+    if (detections.isNotEmpty) {
+      final first = detections.first;
+      _handlePlantDetection(first.code, first.slug);
       return;
     }
 
-    if (_isProcessing) return;
-    _isProcessing = true;
-
-    // Un codigo distinto: cerrar la tarjeta AR antes de continuar.
-    if (_arPlant != null) {
-      _clearAr();
+    if (nonPlantCode != null && !_isProcessing) {
+      _isProcessing = true;
+      if (_arPlant != null) _clearAr();
+      await _showCodeDialogFlow(nonPlantCode);
     }
-
-    await _showCodeDialogFlow(code);
   }
 
   /// Muestra el dialogo clasico para codigos que no son de plantas.
@@ -154,51 +170,122 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     }
   }
 
-  /// Actualiza la capa de realidad aumentada con la planta detectada.
-  void _handlePlantDetection(
-    String code,
-    String slug,
-    List<Offset> corners,
-    Size frameSize,
-  ) {
-    final effectiveFrame =
-        (frameSize.width > 0 && frameSize.height > 0) ? frameSize : _cameraSize;
-    final normalizedCorners = corners.isEmpty ? null : corners;
-    final isSameCode = _arCode == code;
+  /// Muestra la tarjeta AR de la planta activa y resuelve su informacion.
+  void _handlePlantDetection(String code, String slug) {
+    if (_activeSlug == slug && _arPlant != null) return;
 
-    // Si el codigo y la posicion no cambiaron, no hay nada que reconstruir.
-    if (isSameCode && _cornersEqual(normalizedCorners, _arCorners)) {
+    setState(() {
+      _activeSlug = slug;
+      _arPlant = PlantRepository.localInfo(slug);
+      _arLoading = _arPlant == null;
+    });
+
+    if (_arPlant != null) {
+      _onPlantShown(slug, _arPlant!.name);
       return;
     }
 
-    setState(() {
-      _arCode = code;
-      _arCorners = normalizedCorners;
-      _arFrameSize = effectiveFrame;
-      if (!isSameCode) {
-        _arPlant = PlantRepository.localInfo(slug);
-        _arLoading = _arPlant == null;
+    final cached = _resolvedCache[slug];
+    if (cached != null) {
+      setState(() {
+        _arPlant = cached;
+        _arLoading = false;
+      });
+      _onPlantShown(slug, cached.name);
+      return;
+    }
+
+    PlantRepository.resolve(code).then((plant) {
+      if (mounted && _activeSlug == slug) {
+        _resolvedCache[slug] = plant;
+        setState(() {
+          _arPlant = plant;
+          _arLoading = false;
+        });
+        _onPlantShown(slug, plant.name);
       }
     });
+  }
 
-    if (!isSameCode && _arPlant == null) {
-      PlantRepository.resolve(code).then((plant) {
-        if (mounted && _arCode == code) {
-          setState(() {
-            _arPlant = plant;
-            _arLoading = false;
-          });
-        }
-      });
+  /// Actualiza el mapa de marcadores de todas las plantas visibles.
+  void _updateAllMarkers(
+    List<({String code, String slug, List<Offset> corners})> detections,
+    Size frameSize,
+  ) {
+    final markers = <String, List<Offset>>{};
+    for (final d in detections) {
+      if (d.corners.isNotEmpty) markers[d.slug] = d.corners;
     }
+
+    if (_markersEqual(markers, _allMarkers)) return;
+
+    setState(() {
+      _allMarkers = markers;
+      _allFrameSize = (frameSize.width > 0 && frameSize.height > 0)
+          ? frameSize
+          : _cameraSize;
+    });
+  }
+
+  /// Enfoca una planta detectada (seleccion desde la barra superior).
+  void _focusPlant(String slug) {
+    if (_activeSlug == slug) return;
+    _handlePlantDetection('PLANT-$slug', slug);
+  }
+
+  String _labelForSlug(String slug) {
+    final local = PlantRepository.localInfo(slug);
+    if (local != null) return local.name;
+    return slug.replaceAll('_', ' ').replaceAll('-', ' ').trim();
+  }
+
+  /// Recompensa el primer descubrimiento de una planta y muestra un aviso.
+  Future<void> _onPlantShown(String slug, String name) async {
+    final isNew = await PlantCollectionService.addDiscovered(slug);
+    if (!isNew) return;
+
+    const points = 15;
+    const coins = 5;
+    await UserService().addPoints(points);
+    await UserService().addCoins(coins);
+
+    if (!mounted) return;
+    setState(() {
+      _discoveryName = name;
+      _discoveryPoints = points;
+      _showDiscoveryBadge = true;
+    });
+
+    _discoveryTimer?.cancel();
+    _discoveryTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showDiscoveryBadge = false);
+    });
+  }
+
+  /// Registra la actividad "Regar Plantas" (+10 puntos) desde la tarjeta AR.
+  Future<void> _waterPlant(PlantModel plant) async {
+    await UserService().completeActivity('water_plant', 10);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: forestDepth,
+        behavior: SnackBarBehavior.floating,
+        content: Text(
+          '¡${plant.name} regada! +10 puntos',
+          style: const TextStyle(color: Colors.white),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _clearAr() {
     setState(() {
-      _arCode = null;
+      _activeSlug = null;
       _arPlant = null;
-      _arCorners = null;
-      _arFrameSize = null;
+      _allMarkers = {};
+      _allFrameSize = null;
       _arLoading = false;
     });
   }
@@ -295,7 +382,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     // En modo simulacion no hay camara: mostramos la tarjeta AR centrada.
     final slug = PlantRepository.slugFromCode(code);
     if (slug != null) {
-      _handlePlantDetection(code, slug, const [], Size.zero);
+      _handlePlantDetection(code, slug);
       return;
     }
 
@@ -556,7 +643,6 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final widgetSize = constraints.biggest;
-        final markerCenter = _markerCenter(widgetSize);
         final showArCard = _arPlant != null;
 
         return Stack(
@@ -574,12 +660,14 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             // Overlay con guía para escanear (se oculta durante la AR)
             if (!showArCard && !_arLoading) _buildScannerOverlay(),
 
-            // Punto/objetivo anclado al código detectado
-            if (markerCenter != null && showArCard)
-              _ArReticle(center: markerCenter),
+            // Objetivos anclados a cada planta detectada (multi-código)
+            if (showArCard) ..._buildArReticles(widgetSize),
 
-            // Tarjeta AR con la información de la planta
+            // Tarjeta AR con la información de la planta activa
             if (showArCard) _buildArCard(_arPlant!),
+
+            // Barra de plantas detectadas (para cambiar de planta)
+            if (showArCard) _buildDetectedBar(),
 
             // Indicador de carga mientras se resuelve la planta
             if (_arLoading)
@@ -592,6 +680,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
             // Instrucciones en la parte inferior
             if (!showArCard && !_arLoading) _buildBottomHint(),
+
+            // Aviso de nueva planta descubierta
+            if (_showDiscoveryBadge) _buildDiscoveryBadge(),
           ],
         );
       },
@@ -677,6 +768,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             bottom: 90,
             child: _buildArCard(_arPlant!),
           ),
+        if (_showDiscoveryBadge)
+          Positioned.fill(child: _buildDiscoveryBadge()),
       ],
     );
   }
@@ -734,6 +827,55 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             style: AppFont.bodyMedium.copyWith(color: Colors.white),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Aviso centrado de nueva planta descubierta (efecto de recompensa AR).
+  Widget _buildDiscoveryBadge() {
+    return Center(
+      child: IgnorePointer(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.82),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: goldenSun, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: goldenSun.withValues(alpha: 0.4),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.emoji_events, color: goldenSun, size: 36),
+              const SizedBox(height: 6),
+              Text(
+                '¡Nueva planta descubierta!',
+                textAlign: TextAlign.center,
+                style: AppFont.titleMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _discoveryName,
+                textAlign: TextAlign.center,
+                style: AppFont.bodyMedium.copyWith(color: goldenSun),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '+$_discoveryPoints puntos',
+                style: AppFont.bodySmall.copyWith(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -861,26 +1003,53 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _clearAr,
-                      icon: const Icon(Icons.close, size: 18),
+                      icon: const Icon(Icons.close, size: 16),
                       label: const Text('Cerrar'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white54),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _waterPlant(plant),
+                      icon: const Icon(Icons.water_drop, size: 16),
+                      label: const Text('Regar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: emeraldLeaf,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _showPlantDetail(plant),
-                      icon: const Icon(Icons.menu_book, size: 18),
-                      label: const Text('Ficha completa'),
+                      icon: const Icon(Icons.menu_book, size: 16),
+                      label: const Text('Ficha'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: goldenSun,
                         foregroundColor: forestDepth,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -1060,12 +1229,24 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     return true;
   }
 
+  /// Compara dos mapas de marcadores (slug -> esquinas).
+  bool _markersEqual(
+    Map<String, List<Offset>> a,
+    Map<String, List<Offset>> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      final other = b[entry.key];
+      if (other == null) return false;
+      if (!_cornersEqual(entry.value, other)) return false;
+    }
+    return true;
+  }
+
   /// Convierte el centro de las esquinas del código (en coordenadas de la
   /// cámara) a coordenadas del widget, respetando el `BoxFit.cover`.
-  Offset? _markerCenter(Size widgetSize) {
-    final corners = _arCorners;
-    final frame = _arFrameSize;
-    if (corners == null || corners.isEmpty || frame == null) return null;
+  Offset? _markerCenterFor(List<Offset> corners, Size? frame, Size widgetSize) {
+    if (corners.isEmpty || frame == null) return null;
     if (frame.width <= 0 || frame.height <= 0) return null;
     if (widgetSize.width <= 0 || widgetSize.height <= 0) return null;
 
@@ -1094,6 +1275,62 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     return Offset(
       mapped.dx.clamp(margin, widgetSize.width - margin),
       mapped.dy.clamp(margin, widgetSize.height - margin),
+    );
+  }
+
+  /// Genera un objetivo AR por cada planta detectada (acotado a 6).
+  List<Widget> _buildArReticles(Size widgetSize) {
+    final widgets = <Widget>[];
+    final entries = _allMarkers.entries.take(6).toList();
+    for (final entry in entries) {
+      final center = _markerCenterFor(entry.value, _allFrameSize, widgetSize);
+      if (center != null) {
+        widgets.add(
+          _ArReticle(center: center, label: _labelForSlug(entry.key)),
+        );
+      }
+    }
+    return widgets;
+  }
+
+  /// Barra superior con las plantas detectadas (permite cambiar el foco).
+  Widget _buildDetectedBar() {
+    if (_allMarkers.length <= 1) return const SizedBox.shrink();
+    return Positioned(
+      top: 8,
+      left: 0,
+      right: 0,
+      child: SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: [
+            for (final slug in _allMarkers.keys)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(_labelForSlug(slug)),
+                  selected: slug == _activeSlug,
+                  onSelected: (_) => _focusPlant(slug),
+                  backgroundColor: Colors.black.withValues(alpha: 0.55),
+                  selectedColor: goldenSun,
+                  labelStyle: TextStyle(
+                    color: slug == _activeSlug
+                        ? forestDepth
+                        : Colors.white,
+                    fontSize: 12,
+                  ),
+                  side: BorderSide(
+                    color: slug == _activeSlug
+                        ? goldenSun
+                        : Colors.white38,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1178,8 +1415,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 /// Objetivo animado que marca la posición del código detectado (efecto AR).
 class _ArReticle extends StatefulWidget {
   final Offset center;
+  final String? label;
 
-  const _ArReticle({required this.center});
+  const _ArReticle({required this.center, this.label});
 
   @override
   State<_ArReticle> createState() => _ArReticleState();
@@ -1211,49 +1449,70 @@ class _ArReticleState extends State<_ArReticle>
       left: widget.center.dx - size / 2,
       top: widget.center.dy - size / 2,
       child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final progress = _controller.value;
-            final pulse = 1.0 - progress;
-            return SizedBox(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
               width: size,
               height: size,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Anillo que se expande
-                  Transform.scale(
-                    scale: 0.6 + progress * 0.9,
-                    child: Opacity(
-                      opacity: (pulse * 0.8).clamp(0.0, 1.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: goldenSun, width: 2),
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final progress = _controller.value;
+                  final pulse = 1.0 - progress;
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Anillo que se expande
+                      Transform.scale(
+                        scale: 0.6 + progress * 0.9,
+                        child: Opacity(
+                          opacity: (pulse * 0.8).clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: goldenSun, width: 2),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  // Punto central
-                  Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: goldenSun,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: goldenSun.withValues(alpha: 0.6),
-                          blurRadius: 10,
+                      // Punto central
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: goldenSun,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: goldenSun.withValues(alpha: 0.6),
+                              blurRadius: 10,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
-            );
-          },
+            ),
+            if (widget.label != null) ...[
+              const SizedBox(height: 2),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  widget.label!,
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

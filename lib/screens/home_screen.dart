@@ -12,6 +12,7 @@ import 'package:huerto_app/config/widgets/bottom_nav_custom.dart'; // Importar n
 import 'package:huerto_app/config/widgets/progress_widget.dart'; // Importar widget de progreso
 import 'package:huerto_app/models/user_model.dart'; // Importar modelo de usuario
 import 'package:huerto_app/services/activity_service.dart'; // Importar servicio de actividades
+import 'package:huerto_app/services/user_service.dart'; // Importar servicio de usuario
 
 /*
     PANTALLA PRINCIPAL DE INICIO - ESTADO MUTABLE
@@ -41,6 +42,73 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState(); // Llamar al initState del padre
     _simulateAchievementNotifications(); // Simular notificaciones al iniciar
+    UserService().levelUpNotifier.addListener(_onLevelUp);
+  }
+
+  @override
+  void dispose() {
+    UserService().levelUpNotifier.removeListener(_onLevelUp);
+    super.dispose();
+  }
+
+  /// Reacciona a una subida de nivel mostrando una celebración.
+  void _onLevelUp() {
+    final level = UserService().levelUpNotifier.value;
+    if (level == null || !mounted) return;
+    UserService().levelUpNotifier.value = null; // Evita repetición
+    _showLevelUpDialog(level);
+  }
+
+  void _showLevelUpDialog(int level) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: blancoHueso,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Column(
+          children: [
+            const Icon(Icons.workspace_premium,
+                color: goldenSun, size: 64),
+            const SizedBox(height: 8),
+            Text(
+              '¡Subiste de nivel!',
+              textAlign: TextAlign.center,
+              style: AppFont.titleLarge.copyWith(
+                color: forestDepth,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ahora eres nivel $level',
+              textAlign: TextAlign.center,
+              style: AppFont.bodyMedium.copyWith(
+                color: forestDepth,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Sigue cuidando tu huerto para desbloquear más recompensas.',
+              textAlign: TextAlign.center,
+              style: AppFont.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('¡Genial!', style: AppFont.button),
+          ),
+        ],
+      ),
+    );
   }
 
   /*
@@ -240,20 +308,16 @@ class _HomeScreenState extends State<HomeScreen> {
       MANEJO DE LA NAVEGACIÓN DEL BOTTOM BAR
   */
   void _handleNavigation(int index, BuildContext context) {
-    setState(() {
-      // Actualizar estado
-      _currentIndex = index; // Actualizar índice actual
-    });
-
     switch (index) {
       case 0: // Anterior
-        Navigator.pop(context); // Regresar a pantalla anterior
+        Navigator.maybePop(context); // Regresa si hay una pantalla anterior
         break;
       case 1: // Inicio
-        // Ya estamos en home, no hacer nada
+        setState(() => _currentIndex = 1);
         break;
       case 2: // Cuenta
-        _navigateToProfile(context); // Navegar a perfil
+        setState(() => _currentIndex = 1); // Mantiene "Inicio" seleccionado
+        _navigateToProfile(context); // Navega a perfil (pantalla superpuesta)
         break;
     }
   }
@@ -826,7 +890,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     .copyWith(color: forestDepth), // Estilo de texto
               ),
               Text(
-                '${user.totalPoints} pts', // Puntos totales del usuario
+                '${user.ecoCoins} monedas', // Monedas eco-money del usuario
                 style: AppFont.bodySmall.copyWith(
                   color: goldenSun, // Color dorado
                   fontWeight: FontWeight.bold, // Negrita

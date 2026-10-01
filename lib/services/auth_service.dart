@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/login_model.dart';
 import '../models/user_model.dart';
+import 'user_service.dart';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
@@ -79,24 +80,18 @@ class AuthService {
           .timeout(const Duration(seconds: 20));
       final data = doc.data();
 
-      final userModel = UserModel(
+      // Carga el perfil completo (nuevo formato) o migra el formato antiguo.
+      final userModel = _userFromFirestoreData(
+        data,
         id: user.uid,
-        name: data?['nombre'] ?? '',
         email: user.email ?? loginData.email,
-        gender: data?['gender'] == 'femenino'
-            ? UserGender.femenino
-            : UserGender.masculino,
-        totalPoints: data?['totalPoints'] ?? 0,
-        level: data?['level'] ?? 1,
-        completedActivityIds:
-            List<String>.from(data?['completedActivities'] ?? const []),
-        favoriteActivityIds:
-            List<String>.from(data?['favoriteActivities'] ?? const []),
-        createdAt: DateTime.now(),
       );
 
       final token = user.uid;
       await _saveSession(token, userModel, loginData.rememberMe);
+
+      // Sincroniza el estado global de la app con el perfil cargado.
+      UserService().updateUser(userModel);
 
       return {
         'success': true,
@@ -143,19 +138,6 @@ class AuthService {
       final user = cred.user;
 
       if (user != null) {
-        await user.sendEmailVerification();
-
-        await _db.collection('usuarios').doc(user.uid).set({
-          'nombre': name,
-          'correo': email,
-          'gender': gender == UserGender.femenino ? 'femenino' : 'masculino',
-          'totalPoints': 0,
-          'level': 1,
-          'completedActivities': [],
-          'favoriteActivities': [],
-          'fecha_registro': DateTime.now(),
-        });
-
         final userModel = UserModel(
           id: user.uid,
           name: name,
@@ -168,7 +150,13 @@ class AuthService {
           createdAt: DateTime.now(),
         );
 
+        await user.sendEmailVerification();
+
+        // Guarda el perfil completo en Firestore.
+        await _db.collection('usuarios').doc(user.uid).set(userModel.toJson());
+
         await _saveSession(user.uid, userModel, false);
+        UserService().updateUser(userModel);
       }
 
       return {'success': true};
@@ -201,6 +189,46 @@ class AuthService {
     } catch (_) {
       return {'success': false, 'error': 'Error al enviar correo'};
     }
+  }
+
+  /// Construye un [UserModel] desde los datos de Firestore.
+  /// Soporta el nuevo formato (claves en inglés via `toJson`) y migra el
+  /// formato antiguo (claves en español) por compatibilidad.
+  UserModel _userFromFirestoreData(
+    Map<String, dynamic>? data, {
+    required String id,
+    required String email,
+  }) {
+    if (data == null || data.isEmpty) {
+      return UserModel(
+        id: id,
+        name: '',
+        email: email,
+        gender: UserGender.masculino,
+        createdAt: DateTime.now(),
+      );
+    }
+
+    if (data['name'] != null) {
+      return UserModel.fromJson(data).copyWith(id: id, email: email);
+    }
+
+    // Formato antiguo (claves en español)
+    return UserModel(
+      id: id,
+      name: data['nombre'] ?? '',
+      email: email,
+      gender: data['gender'] == 'femenino'
+          ? UserGender.femenino
+          : UserGender.masculino,
+      totalPoints: data['totalPoints'] ?? 0,
+      level: data['level'] ?? 1,
+      completedActivityIds:
+          List<String>.from(data['completedActivities'] ?? const []),
+      favoriteActivityIds:
+          List<String>.from(data['favoriteActivities'] ?? const []),
+      createdAt: DateTime.now(),
+    );
   }
 
   bool _isLocalAdmin(LoginModel loginData) {
